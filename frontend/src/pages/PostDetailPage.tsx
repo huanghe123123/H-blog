@@ -56,7 +56,7 @@ export function PostDetailPage() {
         <div>
           <Typography.Title level={1}>{post.title}</Typography.Title>
           <Typography.Text type="secondary">
-            {post.author.nickname || post.author.username} · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+            <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
           </Typography.Text>
         </div>
         <Space>
@@ -105,7 +105,7 @@ export function PostDetailPage() {
             ]}
           >
             <List.Item.Meta
-              title={`${comment.user.nickname || comment.user.username} · ${dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")}`}
+              title={<><Link to={`/users/${comment.user.id}`}>{comment.user.nickname || comment.user.username}</Link> · {dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")}</>}
               description={comment.content}
             />
           </List.Item>

@@ -19,7 +19,7 @@ def create_post(db: Session, author: User, payload: PostCreate) -> Post:
 
 
 def list_posts(
-    db: Session, skip: int = 0, limit: int = 20, status_filter: str | None = None, user: User | None = None
+    db: Session, skip: int = 0, limit: int = 20, status_filter: str | None = None, user: User | None = None, author_id: int | None = None
 ) -> list[Post]:
     query = select(Post).options(joinedload(Post.author)).order_by(Post.created_at.desc()).offset(skip).limit(limit)
     if status_filter:
@@ -28,6 +28,8 @@ def list_posts(
             query = query.where(Post.author_id == user.id if user else 0)
     else:
         query = query.where(Post.status == PostStatus.published.value)
+    if author_id is not None:
+        query = query.where(Post.author_id == author_id)
     return list(db.scalars(query).unique())
 
 

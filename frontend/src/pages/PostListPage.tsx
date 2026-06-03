@@ -2,7 +2,7 @@ import { Button, Card, Empty, Input, Popconfirm, Space, Typography, message } fr
 import dayjs from "dayjs";
 import { Edit3, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { deletePost, listPosts } from "../api/posts";
 import { useAuth } from "../hooks/useAuth";
 import type { Post } from "../types";
@@ -63,7 +63,7 @@ export function PostListPage() {
                   )}
                   <div className="post-card-footer">
                     <Typography.Text type="secondary" className="post-card-meta">
-                      {post.author.nickname || post.author.username} · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+                      <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
                     </Typography.Text>
                     {user?.role === "admin" && (
                       <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>

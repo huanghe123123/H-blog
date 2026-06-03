@@ -23,10 +23,11 @@ def list_all(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     status_filter: PostStatus | None = Query(default=None, alias="status"),
+    author_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
 ):
-    return list_posts(db, skip=skip, limit=limit, status_filter=status_filter.value if status_filter else None, user=current_user)
+    return list_posts(db, skip=skip, limit=limit, status_filter=status_filter.value if status_filter else None, user=current_user, author_id=author_id)
 
 
 @router.get("/search", response_model=list[PostList])

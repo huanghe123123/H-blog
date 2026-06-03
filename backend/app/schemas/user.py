@@ -74,3 +74,12 @@ class UserBrief(ORMModel):
     username: str
     nickname: str | None
     avatar_url: str | None
+
+
+class UserProfile(ORMModel):
+    id: int
+    username: str
+    nickname: str | None
+    avatar_url: str | None
+    bio: str | None
+    created_at: datetime

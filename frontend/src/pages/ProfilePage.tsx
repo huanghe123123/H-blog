@@ -18,7 +18,7 @@ export function ProfilePage() {
   };
 
   return (
-    <section className="profile-page">
+    <section>
       <Typography.Title level={2}>个人资料</Typography.Title>
       <Form form={form} layout="vertical" onFinish={onFinish}>
         <Form.Item label="昵称" name="nickname">

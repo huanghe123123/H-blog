@@ -7,6 +7,7 @@ import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
 import { PostListPage } from "../pages/PostListPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { UserProfilePage } from "../pages/UserProfilePage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <PostListPage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
+      { path: "/users/:id", element: <UserProfilePage /> },
       {
         element: <ProtectedRoute />,
         children: [

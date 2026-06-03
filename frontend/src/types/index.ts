@@ -15,6 +15,8 @@ export type User = {
 
 export type UserBrief = Pick<User, "id" | "username" | "nickname" | "avatar_url">;
 
+export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_url" | "bio" | "created_at">;
+
 export type PostStatus = "draft" | "published";
 
 export type Post = {
