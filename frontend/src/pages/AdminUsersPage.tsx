@@ -66,7 +66,7 @@ export function AdminUsersPage() {
                 value={role}
                 options={ROLE_OPTIONS}
                 style={{ width: 100 }}
-                disabled={record.id === me?.id}
+                disabled={record.id === me?.id || record.role === "admin"}
                 onChange={(value) => onRoleChange(record.id, value)}
               />
             )
@@ -77,7 +77,7 @@ export function AdminUsersPage() {
             render: (active, record) => (
               <Switch
                 checked={active}
-                disabled={record.id === me?.id}
+                disabled={record.id === me?.id || record.role === "admin"}
                 onChange={(checked) => onStatusChange(record.id, checked)}
               />
             )
@@ -92,7 +92,7 @@ export function AdminUsersPage() {
             key: "actions",
             width: 80,
             render: (_, record) =>
-              record.id !== me?.id ? (
+              record.id !== me?.id && record.role !== "admin" ? (
                 <Popconfirm title="确认删除该用户？" onConfirm={() => onDelete(record.id)}>
                   <Button size="small" danger icon={<Trash2 size={14} />} />
                 </Popconfirm>

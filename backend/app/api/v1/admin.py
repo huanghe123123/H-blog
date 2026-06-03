@@ -28,6 +28,8 @@ def update_role(
     _admin: User = Depends(require_admin),
 ):
     user = get_user_or_404(db, user_id)
+    if user.role == "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="不能修改其他管理员的角色")
     return set_user_role(db, user, payload.role)
 
 
@@ -36,9 +38,11 @@ def update_status(
     user_id: int,
     payload: UserStatusUpdate,
     db: Session = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    admin: User = Depends(require_admin),
 ):
     user = get_user_or_404(db, user_id)
+    if user.id != admin.id and user.role == "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="不能停用其他管理员")
     return set_user_status(db, user, payload.is_active)
 
 
@@ -51,5 +55,7 @@ def remove_user(
     if user_id == admin.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="不能删除自己")
     user = get_user_or_404(db, user_id)
+    if user.role == "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="不能删除其他管理员")
     delete_user(db, user)
     return {"message": f"用户 {user.username} 已删除"}
