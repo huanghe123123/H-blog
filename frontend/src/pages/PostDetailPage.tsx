@@ -2,7 +2,7 @@ import MDEditor from "@uiw/react-md-editor";
 import { Button, Divider, Form, Input, List, Popconfirm, Space, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { createComment, deleteComment, listComments } from "../api/comments";
 import { deletePost, getPost } from "../api/posts";
@@ -18,13 +18,20 @@ export function PostDetailPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [form] = Form.useForm<{ content: string }>();
   const postId = Number(id);
+  const loadedId = useRef<number | null>(null);
 
   const load = async () => {
     setPost(await getPost(postId));
     setComments(await listComments(postId));
   };
 
+  const refreshComments = async () => {
+    setComments(await listComments(postId));
+  };
+
   useEffect(() => {
+    if (loadedId.current === postId) return;
+    loadedId.current = postId;
     void load();
   }, [postId]);
 
@@ -40,7 +47,7 @@ export function PostDetailPage() {
   const onComment = async ({ content }: { content: string }) => {
     await createComment(post.id, content);
     form.resetFields();
-    await load();
+    await refreshComments();
   };
 
   return (
@@ -85,7 +92,7 @@ export function PostDetailPage() {
             actions={[
               <LikeButton key="like" targetType="comment" targetId={comment.id} />,
               user?.id === comment.user_id ? (
-                <Popconfirm key="delete" title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await load(); }}>
+                <Popconfirm key="delete" title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await refreshComments(); }}>
                   <Button danger size="small" icon={<Trash2 size={14} />} />
                 </Popconfirm>
               ) : null
