@@ -1,4 +1,4 @@
-import { Button, Layout, Menu, Space, Typography } from "antd";
+import { Avatar, Button, Layout, Menu, Space, Typography } from "antd";
 import { ChevronLeft, ChevronRight, Edit3, LogOut, Newspaper, Shield, UserRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ export function AppLayout() {
     ? [
         { key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> },
         { key: "/posts/new", icon: <Edit3 size={18} />, label: <Link to="/posts/new">写文章</Link> },
-        { key: "/profile", icon: <UserRound size={18} />, label: <Link to="/profile">资料</Link> },
+        { key: `/users/${user.id}`, icon: <UserRound size={18} />, label: <Link to={`/users/${user.id}`}>资料</Link> },
         ...(user.role === "admin" ? [{ key: "/admin/users", icon: <Shield size={18} />, label: <Link to="/admin/users">用户管理</Link> }] : [])
       ]
     : [{ key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> }];
@@ -35,8 +35,8 @@ export function AppLayout() {
     ? "/admin/users"
     : location.pathname.startsWith("/posts/new") || location.pathname.includes("/edit")
       ? "/posts/new"
-      : location.pathname.startsWith("/profile")
-        ? "/profile"
+      : location.pathname.startsWith("/users")
+        ? `/users/${user?.id ?? ""}`
         : "/";
 
   return (
@@ -67,6 +67,7 @@ export function AppLayout() {
           <Space>
             {loading ? null : user ? (
               <>
+                <Avatar src={user.avatar_url} icon={<UserRound />} style={{ cursor: "pointer" }} onClick={() => navigate(`/users/${user.id}`)} />
                 <Typography.Text strong>{user.nickname || user.username}</Typography.Text>
                 <Button icon={<LogOut size={16} />} onClick={() => { logout(); navigate("/login"); }} />
               </>

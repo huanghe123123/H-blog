@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from typing import Literal
 
@@ -22,6 +22,8 @@ class UserUpdate(BaseModel):
     nickname: str | None = Field(default=None, max_length=80)
     avatar_url: str | None = Field(default=None, max_length=500)
     bio: str | None = Field(default=None, max_length=2000)
+    birthday: date | None = None
+    gender: Literal["male", "female", "other"] | None = None
 
 
 class UserPublic(ORMModel):
@@ -31,6 +33,8 @@ class UserPublic(ORMModel):
     nickname: str | None
     avatar_url: str | None
     bio: str | None
+    birthday: date | None
+    gender: str | None
     role: str
     is_active: bool
     is_verified: bool
@@ -82,4 +86,7 @@ class UserProfile(ORMModel):
     nickname: str | None
     avatar_url: str | None
     bio: str | None
+    birthday: date | None
+    gender: str | None
+    role: str
     created_at: datetime

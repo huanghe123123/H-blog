@@ -1,3 +1,4 @@
+import { Navigate } from "react-router-dom";
 import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { AppLayout } from "../layouts/AppLayout";
@@ -6,8 +7,14 @@ import { LoginPage } from "../pages/LoginPage";
 import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
 import { PostListPage } from "../pages/PostListPage";
-import { ProfilePage } from "../pages/ProfilePage";
 import { UserProfilePage } from "../pages/UserProfilePage";
+import { useAuth } from "../hooks/useAuth";
+
+function ProfileRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user ? `/users/${user.id}` : "/login"} replace />;
+}
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -22,7 +29,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/posts/new", element: <PostEditorPage /> },
           { path: "/posts/:id/edit", element: <PostEditorPage /> },
-          { path: "/profile", element: <ProfilePage /> },
+          { path: "/profile", element: <ProfileRedirect /> },
           { path: "/admin/users", element: <AdminUsersPage /> }
         ]
       }

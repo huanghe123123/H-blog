@@ -5,6 +5,8 @@ export type User = {
   nickname?: string | null;
   avatar_url?: string | null;
   bio?: string | null;
+  birthday?: string | null;
+  gender?: string | null;
   role: string;
   is_active: boolean;
   is_verified: boolean;
@@ -15,7 +17,7 @@ export type User = {
 
 export type UserBrief = Pick<User, "id" | "username" | "nickname" | "avatar_url">;
 
-export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_url" | "bio" | "created_at">;
+export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_url" | "bio" | "birthday" | "gender" | "role" | "created_at">;
 
 export type PostStatus = "draft" | "published";
 
