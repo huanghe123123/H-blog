@@ -11,9 +11,10 @@ export type PostPayload = {
 
 export async function listPosts(params?: { keyword?: string; status?: PostStatus }) {
   const endpoint = params?.keyword ? "/posts/search" : "/posts";
-  const { data } = await api.get<Post[]>(endpoint, {
-    params: params?.keyword ? { keyword: params.keyword } : { status: params?.status }
-  });
+  const query: Record<string, string> = {};
+  if (params?.keyword) query.keyword = params.keyword;
+  if (params?.status) query.status = params.status;
+  const { data } = await api.get<Post[]>(endpoint, { params: query });
   return data;
 }
 

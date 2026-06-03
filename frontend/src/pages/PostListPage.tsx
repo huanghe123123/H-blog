@@ -1,7 +1,7 @@
 import { Button, Empty, Input, Popconfirm, Space, Table, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { deletePost, listPosts } from "../api/posts";
 import { useAuth } from "../hooks/useAuth";
@@ -13,6 +13,10 @@ export function PostListPage() {
   const [keyword, setKeyword] = useState("");
 
   const load = async () => setPosts(await listPosts({ keyword: keyword || undefined }));
+
+  useEffect(() => {
+    void load();
+  }, []);
 
   const onDeletePost = async (id: number) => {
     await deletePost(id);
