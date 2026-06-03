@@ -121,6 +121,9 @@ export function LoginPage() {
             }
           ]}
         />
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <Button type="link" onClick={() => navigate("/")}>暂不登录</Button>
+        </div>
       </Card>
     </main>
   );

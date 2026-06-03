@@ -2,8 +2,10 @@ import { Button, message } from "antd";
 import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getLikeStatus, like, unlike } from "../api/likes";
+import { useAuth } from "../hooks/useAuth";
 
 export function LikeButton({ targetType, targetId }: { targetType: "post" | "comment"; targetId: number }) {
+  const { user } = useAuth();
   const [liked, setLiked] = useState(false);
   const [count, setCount] = useState(0);
 
@@ -18,6 +20,10 @@ export function LikeButton({ targetType, targetId }: { targetType: "post" | "com
   }, [targetType, targetId]);
 
   const toggle = async () => {
+    if (!user) {
+      message.warning("请先登录");
+      return;
+    }
     try {
       if (liked) {
         await unlike(targetType, targetId);

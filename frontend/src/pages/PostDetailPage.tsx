@@ -78,12 +78,18 @@ export function PostDetailPage() {
       </div>
       <Divider />
       <Typography.Title level={3}>评论</Typography.Title>
-      <Form form={form} layout="vertical" onFinish={onComment}>
-        <Form.Item name="content" rules={[{ required: true, message: "请输入评论" }]}>
-          <Input.TextArea rows={3} maxLength={3000} />
-        </Form.Item>
-        <Button type="primary" htmlType="submit">发布评论</Button>
-      </Form>
+      {user ? (
+        <Form form={form} layout="vertical" onFinish={onComment}>
+          <Form.Item name="content" rules={[{ required: true, message: "请输入评论" }]}>
+            <Input.TextArea rows={3} maxLength={3000} />
+          </Form.Item>
+          <Button type="primary" htmlType="submit">发布评论</Button>
+        </Form>
+      ) : (
+        <Typography.Text type="secondary">
+          <Link to="/login">登录</Link>后即可评论
+        </Typography.Text>
+      )}
       <List
         className="comment-list"
         dataSource={comments}

@@ -29,7 +29,7 @@ export function PostListPage() {
     <section>
       <div className="page-title-row">
         <Typography.Title level={2}>文章</Typography.Title>
-        <Button type="primary"><Link to="/posts/new">新建文章</Link></Button>
+        {user && <Button type="primary"><Link to="/posts/new">新建文章</Link></Button>}
       </div>
       <Space className="toolbar" wrap>
         <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} prefix={<Search size={16} />} placeholder="搜索标题、摘要、内容" onPressEnter={load} />
