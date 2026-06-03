@@ -5,12 +5,15 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.user import User
 from app.schemas.user import EmailVerify, EmailResend, UserRegister, UserUpdate
 from app.utils.email import send_verification_email
 from app.utils.security import get_password_hash, verify_password
 
-TOKEN_EXPIRE_SECONDS = 20
+
+def _token_expiry() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(seconds=get_settings().verification_token_expire_seconds)
 
 
 def create_user(db: Session, payload: UserRegister) -> User:
@@ -36,7 +39,7 @@ def create_user(db: Session, payload: UserRegister) -> User:
         hashed_password=get_password_hash(payload.password),
         nickname=payload.username,
         verification_token=token,
-        verification_token_expires_at=datetime.now(timezone.utc) + timedelta(seconds=TOKEN_EXPIRE_SECONDS),
+        verification_token_expires_at=_token_expiry(),
     )
     db.add(user)
     db.commit()
@@ -54,7 +57,7 @@ def _refresh_token_if_expired(db: Session, user: User) -> User:
     )
     if not token_valid:
         user.verification_token = uuid.uuid4().hex
-        user.verification_token_expires_at = now + timedelta(seconds=TOKEN_EXPIRE_SECONDS)
+        user.verification_token_expires_at = _token_expiry()
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -66,7 +69,7 @@ def authenticate_user(db: Session, identifier: str, password: str) -> User | Non
     user = db.scalar(select(User).where(or_(User.username == identifier, User.email == identifier)))
     if not user or not verify_password(password, user.hashed_password):
         return None
-    if not user.is_verified:
+    if get_settings().email_verification_enabled and not user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="请先验证邮箱后再登录",
@@ -97,7 +100,7 @@ def resend_verification(db: Session, payload: EmailResend) -> User:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="该邮箱已验证，请直接登录")
     token = uuid.uuid4().hex
     user.verification_token = token
-    user.verification_token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=TOKEN_EXPIRE_SECONDS)
+    user.verification_token_expires_at = _token_expiry()
     db.add(user)
     db.commit()
     db.refresh(user)

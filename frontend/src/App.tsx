@@ -1,12 +1,34 @@
-import { ConfigProvider, App as AntApp } from "antd";
+import { ConfigProvider, App as AntApp, Spin } from "antd";
 import zhCN from "antd/locale/zh_CN";
+import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router-dom";
+import { fetchSiteConfig, type SiteConfig } from "./api/config";
 import { AuthProvider } from "./hooks/useAuth";
 import { router } from "./router";
 
 export default function App() {
+  const [config, setConfig] = useState<SiteConfig | null>(null);
+
+  useEffect(() => {
+    fetchSiteConfig().then((cfg) => {
+      document.title = cfg.site_name;
+      setConfig(cfg);
+    });
+  }, []);
+
+  if (!config) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
-    <ConfigProvider locale={zhCN} theme={{ token: { borderRadius: 6, colorPrimary: "#1f6feb" } }}>
+    <ConfigProvider
+      locale={config.locale === "zh-CN" ? zhCN : undefined}
+      theme={{ token: { borderRadius: config.border_radius, colorPrimary: config.primary_color } }}
+    >
       <AntApp>
         <AuthProvider>
           <RouterProvider router={router} />

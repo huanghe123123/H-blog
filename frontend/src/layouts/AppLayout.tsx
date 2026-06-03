@@ -1,6 +1,8 @@
 import { Button, Layout, Menu, Space, Typography } from "antd";
 import { Edit3, LogOut, Newspaper, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { fetchSiteConfig } from "../api/config";
 import { useAuth } from "../hooks/useAuth";
 
 const { Header, Content, Sider } = Layout;
@@ -9,11 +11,16 @@ export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [siteName, setSiteName] = useState("");
+
+  useEffect(() => {
+    fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
+  }, []);
 
   return (
     <Layout className="app-shell">
       <Sider width={232} className="app-sider">
-        <Typography.Title level={3} className="brand">huanghe123123's blog</Typography.Title>
+        <Typography.Title level={3} className="brand">{siteName}</Typography.Title>
         <Menu
           mode="inline"
           selectedKeys={[location.pathname.startsWith("/posts/new") ? "/posts/new" : location.pathname.startsWith("/profile") ? "/profile" : "/"]}

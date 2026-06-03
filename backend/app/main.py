@@ -23,3 +23,20 @@ app.include_router(api_router, prefix=settings.api_prefix)
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get(f"{settings.api_prefix}/config")
+def public_config():
+    """Public config endpoint — consumed by the frontend at runtime."""
+    return {
+        "site_name": settings.site_name,
+        "site_description": settings.site_description,
+        "primary_color": settings.primary_color,
+        "border_radius": settings.border_radius,
+        "locale": settings.locale,
+        "features": {
+            "email_verification": settings.email_verification_enabled,
+            "comments": settings.comments_enabled,
+            "likes": settings.likes_enabled,
+        },
+    }

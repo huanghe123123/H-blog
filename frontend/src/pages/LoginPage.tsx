@@ -1,6 +1,8 @@
 import { Button, Card, Form, Input, Modal, Tabs, Typography, message } from "antd";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, register, resendVerification, verifyEmail } from "../api/auth";
+import { fetchSiteConfig } from "../api/config";
 import { useAuth } from "../hooks/useAuth";
 import axios from "axios";
 
@@ -8,6 +10,11 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { refresh } = useAuth();
   const [registerForm] = Form.useForm();
+  const [siteName, setSiteName] = useState("");
+
+  useEffect(() => {
+    fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
+  }, []);
 
   const onLogin = async (values: { identifier: string; password: string }) => {
     await login(values);
@@ -76,7 +83,7 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <Card className="auth-card">
-        <Typography.Title level={2}>huanghe123123's blog</Typography.Title>
+        <Typography.Title level={2}>{siteName}</Typography.Title>
         <Tabs
           items={[
             {
