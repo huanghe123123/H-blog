@@ -52,6 +52,9 @@ auth:
   access_token_expire_minutes: 1440
   # 邮箱验证 token 有效期（秒），默认 20 分钟
   verification_token_expire_seconds: 1200
+  # 速率限制（每分钟每IP请求次数）
+  rate_limit_login: "5/minute"
+  rate_limit_register: "3/minute"
 
 # ---------------------------------------------------------------------------
 # 邮件（邮箱验证用）

@@ -17,9 +17,23 @@ export function LoginPage() {
   }, []);
 
   const onLogin = async (values: { identifier: string; password: string }) => {
-    await login(values);
-    await refresh();
-    navigate("/");
+    try {
+      await login(values);
+      await refresh();
+      navigate("/");
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 429) {
+          message.error(err.response.data?.detail || "请求过于频繁，请稍后再试");
+        } else if (err.response?.status === 401) {
+          message.error("用户名或密码错误");
+        } else {
+          message.error("登录失败，请稍后重试");
+        }
+      } else {
+        message.error("登录失败，请稍后重试");
+      }
+    }
   };
 
   const tryVerify = async (token: string, email: string) => {
@@ -67,12 +81,18 @@ export function LoginPage() {
         message.success("注册成功！请检查邮箱完成验证后再登录");
       }
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 409) {
-        const detail = err.response.data?.detail;
-        if (detail?.field) {
-          registerForm.setFields([
-            { name: detail.field, errors: [detail.message] },
-          ]);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 409) {
+          const detail = err.response.data?.detail;
+          if (detail?.field) {
+            registerForm.setFields([
+              { name: detail.field, errors: [detail.message] },
+            ]);
+          }
+        } else if (err.response?.status === 429) {
+          message.error(err.response.data?.detail || "请求过于频繁，请稍后再试");
+        } else {
+          message.error("注册失败，请稍后重试");
         }
       } else {
         message.error("注册失败，请稍后重试");
