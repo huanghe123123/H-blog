@@ -55,8 +55,8 @@ def get_post_detail(db: Session, post_id: int) -> Post:
 
 
 def update_post(db: Session, post: Post, user: User, payload: PostUpdate) -> Post:
-    if post.author_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only author can update this post")
+    if post.author_id != user.id and user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以编辑此文章")
     old_status = post.status
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(post, field, value)
@@ -68,7 +68,7 @@ def update_post(db: Session, post: Post, user: User, payload: PostUpdate) -> Pos
 
 
 def delete_post(db: Session, post: Post, user: User) -> None:
-    if post.author_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only author can delete this post")
+    if post.author_id != user.id and user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以删除此文章")
     db.delete(post)
     db.commit()
