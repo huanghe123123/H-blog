@@ -18,10 +18,16 @@ def create_post(db: Session, author: User, payload: PostCreate) -> Post:
     return get_post_or_404(db, post.id)
 
 
-def list_posts(db: Session, skip: int = 0, limit: int = 20, status_filter: str | None = None) -> list[Post]:
+def list_posts(
+    db: Session, skip: int = 0, limit: int = 20, status_filter: str | None = None, user: User | None = None
+) -> list[Post]:
     query = select(Post).options(joinedload(Post.author)).order_by(Post.created_at.desc()).offset(skip).limit(limit)
     if status_filter:
         query = query.where(Post.status == status_filter)
+        if status_filter == PostStatus.draft.value and (not user or user.role != "admin"):
+            query = query.where(Post.author_id == user.id if user else 0)
+    else:
+        query = query.where(Post.status == PostStatus.published.value)
     return list(db.scalars(query).unique())
 
 
@@ -30,7 +36,10 @@ def search_posts(db: Session, keyword: str, skip: int = 0, limit: int = 20) -> l
     query = (
         select(Post)
         .options(joinedload(Post.author))
-        .where(or_(Post.title.ilike(pattern), Post.summary.ilike(pattern), Post.content.ilike(pattern)))
+        .where(
+            Post.status == PostStatus.published.value,
+            or_(Post.title.ilike(pattern), Post.summary.ilike(pattern), Post.content.ilike(pattern)),
+        )
         .order_by(Post.created_at.desc())
         .offset(skip)
         .limit(limit)

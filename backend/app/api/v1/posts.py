@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_optional_user
 from app.db.session import get_db
 from app.models.post import PostStatus
 from app.models.user import User
@@ -24,8 +24,9 @@ def list_all(
     limit: int = Query(20, ge=1, le=100),
     status_filter: PostStatus | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
-    return list_posts(db, skip=skip, limit=limit, status_filter=status_filter.value if status_filter else None)
+    return list_posts(db, skip=skip, limit=limit, status_filter=status_filter.value if status_filter else None, user=current_user)
 
 
 @router.get("/search", response_model=list[PostList])

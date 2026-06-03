@@ -1,29 +1,24 @@
-import { Button, Empty, Input, Popconfirm, Select, Space, Table, Tag, Typography, message } from "antd";
+import { Button, Empty, Input, Popconfirm, Space, Table, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { deletePost, listPosts } from "../api/posts";
 import { useAuth } from "../hooks/useAuth";
-import type { Post, PostStatus } from "../types";
+import type { Post } from "../types";
 
 export function PostListPage() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState<PostStatus | undefined>();
 
-  const load = async () => setPosts(await listPosts({ keyword: keyword || undefined, status }));
+  const load = async () => setPosts(await listPosts({ keyword: keyword || undefined }));
 
   const onDeletePost = async (id: number) => {
     await deletePost(id);
     message.success("文章已删除");
     await load();
   };
-
-  useEffect(() => {
-    void load();
-  }, [status]);
 
   return (
     <section>
@@ -33,7 +28,6 @@ export function PostListPage() {
       </div>
       <Space className="toolbar" wrap>
         <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} prefix={<Search size={16} />} placeholder="搜索标题、摘要、内容" onPressEnter={load} />
-        <Select allowClear placeholder="状态" style={{ width: 140 }} value={status} onChange={setStatus} options={[{ value: "draft", label: "草稿" }, { value: "published", label: "已发布" }]} />
         <Button onClick={load}>搜索</Button>
       </Space>
       <Table

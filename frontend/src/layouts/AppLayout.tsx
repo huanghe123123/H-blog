@@ -28,7 +28,7 @@ export function AppLayout() {
 
   const selectedKey = location.pathname.startsWith("/admin")
     ? "/admin/users"
-    : location.pathname.startsWith("/posts/new")
+    : location.pathname.startsWith("/posts/new") || location.pathname.includes("/edit")
       ? "/posts/new"
       : location.pathname.startsWith("/profile")
         ? "/profile"
