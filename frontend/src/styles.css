@@ -20,6 +20,31 @@ body {
   padding: 20px 12px;
 }
 
+.sider-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -14px;
+  width: 14px;
+  height: 48px;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #afb4ba;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  color: #57606a;
+  z-index: 10;
+}
+
+.sider-toggle:hover {
+  color: #1f2328;
+  background: #ffffff;
+}
+
 .brand {
   margin: 0 12px 24px !important;
   color: #1f2328 !important;
@@ -37,7 +62,6 @@ body {
 
 .app-content {
   padding: 24px;
-  max-width: 1180px;
   width: 100%;
 }
 
@@ -84,6 +108,10 @@ body {
   margin-top: 16px;
 }
 
+.editor-main {
+  padding-right: 284px;
+}
+
 .post-detail .cover {
   width: 100%;
   max-height: 360px;
@@ -109,22 +137,26 @@ body {
   max-width: 720px;
 }
 
-@media (max-width: 720px) {
-  .app-shell {
-    display: block;
-  }
-
-  .app-sider {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
+@media (max-width: 992px) {
+  .app-header {
+    justify-content: space-between;
+    padding: 0 16px;
   }
 
   .page-title-row {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .app-content {
     padding: 16px;
+  }
+
+  .draft-sidebar {
+    display: none;
+  }
+
+  .editor-main {
+    padding-right: 0;
   }
 }

@@ -71,7 +71,7 @@ export function PostEditorPage() {
 
   return (
     <section>
-      <div>
+      <div className="editor-main">
         <Typography.Title level={2}>
           {id ? "编辑文章" : "新建文章"}
           {editingStatus === "draft" && <Tag color="orange" style={{ marginLeft: 12 }}>草稿</Tag>}
@@ -97,6 +97,7 @@ export function PostEditorPage() {
       </div>
       <Card
         title="草稿箱"
+        className="draft-sidebar"
         style={{
           width: 260,
           position: "fixed",

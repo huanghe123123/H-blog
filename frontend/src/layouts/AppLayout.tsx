@@ -1,6 +1,6 @@
 import { Button, Layout, Menu, Space, Typography } from "antd";
-import { Edit3, LogOut, Newspaper, Shield, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Edit3, LogOut, Newspaper, Shield, UserRound } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
 import { useAuth } from "../hooks/useAuth";
@@ -12,9 +12,14 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [siteName, setSiteName] = useState("");
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
+  }, []);
+
+  const handleCollapse = useCallback((value: boolean) => {
+    setCollapsed(value);
   }, []);
 
   const menuItems = user
@@ -36,9 +41,26 @@ export function AppLayout() {
 
   return (
     <Layout className="app-shell">
-      <Sider width={232} className="app-sider">
-        <Typography.Title level={3} className="brand">{siteName}</Typography.Title>
-        <Menu mode="inline" selectedKeys={[selectedKey]} items={menuItems} />
+      <Sider
+        width={232}
+        collapsedWidth={80}
+        breakpoint="lg"
+        collapsible
+        collapsed={collapsed}
+        onCollapse={handleCollapse}
+        trigger={null}
+        className="app-sider"
+      >
+        <div style={{ position: "relative", height: "100%" }}>
+          <Typography.Title level={3} className="brand">{collapsed ? "" : siteName}</Typography.Title>
+          <Menu mode="inline" selectedKeys={[selectedKey]} items={menuItems} inlineCollapsed={collapsed} />
+          <Button
+            className="sider-toggle"
+            type="text"
+            icon={collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            onClick={() => setCollapsed(!collapsed)}
+          />
+        </div>
       </Sider>
       <Layout>
         <Header className="app-header">
