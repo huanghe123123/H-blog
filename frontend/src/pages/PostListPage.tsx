@@ -4,6 +4,7 @@ import { Edit3, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deletePost, listPosts } from "../api/posts";
+import { LikeButton } from "../components/LikeButton";
 import { useAuth } from "../hooks/useAuth";
 import type { Post } from "../types";
 
@@ -65,14 +66,17 @@ export function PostListPage() {
                     <Typography.Text type="secondary" className="post-card-meta">
                       <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
                     </Typography.Text>
-                    {user?.role === "admin" && (
-                      <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
-                        <Button size="small" icon={<Edit3 size={14} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
-                        <Popconfirm title="确认删除文章？" onConfirm={() => onDeletePost(post.id)}>
-                          <Button size="small" danger icon={<Trash2 size={14} />} />
-                        </Popconfirm>
-                      </Space>
-                    )}
+                    <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
+                      <LikeButton targetType="post" targetId={post.id} />
+                      {user?.role === "admin" && (
+                        <>
+                          <Button size="small" icon={<Edit3 size={14} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
+                          <Popconfirm title="确认删除文章？" onConfirm={() => onDeletePost(post.id)}>
+                            <Button size="small" danger icon={<Trash2 size={14} />} />
+                          </Popconfirm>
+                        </>
+                      )}
+                    </Space>
                   </div>
                 </div>
               </div>
