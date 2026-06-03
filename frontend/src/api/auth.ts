@@ -12,6 +12,16 @@ export async function login(payload: { identifier: string; password: string }) {
   return data;
 }
 
+export async function verifyEmail(token: string) {
+  const { data } = await api.post<{ message: string }>("/auth/verify-email", { token });
+  return data;
+}
+
+export async function resendVerification(email: string) {
+  const { data } = await api.post<{ message: string }>("/auth/resend-verification", { email });
+  return data;
+}
+
 export function logout() {
   localStorage.removeItem(TOKEN_KEY);
 }

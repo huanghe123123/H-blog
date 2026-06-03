@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
     backend_cors_origins: list[AnyHttpUrl | str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = "noreply@example.com"
+    frontend_url: str = "http://localhost:5173"
 
 
 @lru_cache

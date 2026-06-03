@@ -7,6 +7,8 @@ export type User = {
   bio?: string | null;
   role: string;
   is_active: boolean;
+  is_verified: boolean;
+  verification_url?: string | null;
   created_at: string;
   updated_at: string;
 };

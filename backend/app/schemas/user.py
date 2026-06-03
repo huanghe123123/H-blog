@@ -31,8 +31,18 @@ class UserPublic(ORMModel):
     bio: str | None
     role: str
     is_active: bool
+    is_verified: bool
+    verification_url: str | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class EmailVerify(BaseModel):
+    token: str = Field(min_length=1, max_length=128)
+
+
+class EmailResend(BaseModel):
+    email: EmailStr
 
 
 class UserBrief(ORMModel):

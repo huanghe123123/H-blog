@@ -1,11 +1,13 @@
-import { Button, Card, Form, Input, Tabs, Typography, message } from "antd";
+import { Button, Card, Form, Input, Modal, Tabs, Typography, message } from "antd";
 import { useNavigate } from "react-router-dom";
-import { login, register } from "../api/auth";
+import { login, register, resendVerification, verifyEmail } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { refresh } = useAuth();
+  const [registerForm] = Form.useForm();
 
   const onLogin = async (values: { identifier: string; password: string }) => {
     await login(values);
@@ -13,12 +15,62 @@ export function LoginPage() {
     navigate("/");
   };
 
+  const tryVerify = async (token: string, email: string) => {
+    try {
+      await verifyEmail(token);
+      message.success("邮箱验证成功，请登录");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 410) {
+        Modal.confirm({
+          title: "验证链接已过期",
+          content: "验证链接已过期，是否重新发送验证邮件？",
+          okText: "重新发送",
+          cancelText: "取消",
+          onOk: async () => {
+            await resendVerification(email);
+            message.success("验证邮件已重新发送，请查看控制台");
+          },
+        });
+      } else {
+        message.error("验证失败，请稍后重试");
+      }
+    }
+  };
+
   const onRegister = async (values: { username: string; email: string; password: string }) => {
-    await register(values);
-    await login({ identifier: values.username, password: values.password });
-    await refresh();
-    message.success("注册成功");
-    navigate("/");
+    registerForm.setFields([
+      { name: "username", errors: [] },
+      { name: "email", errors: [] },
+    ]);
+    try {
+      const user = await register(values);
+      if (user.verification_url) {
+        const token = new URL(user.verification_url).searchParams.get("token");
+        Modal.confirm({
+          title: "注册成功",
+          content: "点击「验证邮箱」完成邮箱验证后即可登录",
+          okText: "验证邮箱",
+          cancelText: "稍后再说",
+          onOk: () => {
+            if (!token) return;
+            return tryVerify(token, values.email);
+          },
+        });
+      } else {
+        message.success("注册成功！请检查邮箱完成验证后再登录");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        const detail = err.response.data?.detail;
+        if (detail?.field) {
+          registerForm.setFields([
+            { name: detail.field, errors: [detail.message] },
+          ]);
+        }
+      } else {
+        message.error("注册失败，请稍后重试");
+      }
+    }
   };
 
   return (
@@ -46,7 +98,7 @@ export function LoginPage() {
               key: "register",
               label: "注册",
               children: (
-                <Form layout="vertical" onFinish={onRegister}>
+                <Form form={registerForm} layout="vertical" onFinish={onRegister}>
                   <Form.Item name="username" label="用户名" rules={[{ required: true, min: 3 }]}>
                     <Input />
                   </Form.Item>
@@ -56,7 +108,7 @@ export function LoginPage() {
                   <Form.Item name="password" label="密码" rules={[{ required: true, min: 8 }]}>
                     <Input.Password />
                   </Form.Item>
-                  <Button type="primary" htmlType="submit" block>注册并登录</Button>
+                  <Button type="primary" htmlType="submit" block>注册</Button>
                 </Form>
               )
             }
