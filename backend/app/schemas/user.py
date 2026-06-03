@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field
 
 from app.schemas.common import ORMModel
@@ -43,6 +45,28 @@ class EmailVerify(BaseModel):
 
 class EmailResend(BaseModel):
     email: EmailStr
+
+
+class UserRoleUpdate(BaseModel):
+    role: Literal["user", "moderator", "admin"]
+
+
+class UserStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class AdminUserDeleteResponse(BaseModel):
+    message: str
+
+
+class AdminUserItem(ORMModel):
+    id: int
+    username: str
+    email: EmailStr
+    nickname: str | None
+    role: str
+    is_active: bool
+    is_verified: bool
 
 
 class UserBrief(ORMModel):

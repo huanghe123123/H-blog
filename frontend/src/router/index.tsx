@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { AppLayout } from "../layouts/AppLayout";
+import { AdminUsersPage } from "../pages/AdminUsersPage";
 import { LoginPage } from "../pages/LoginPage";
 import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
@@ -19,7 +20,8 @@ export const router = createBrowserRouter([
           { path: "/posts/new", element: <PostEditorPage /> },
           { path: "/posts/:id", element: <PostDetailPage /> },
           { path: "/posts/:id/edit", element: <PostEditorPage /> },
-          { path: "/profile", element: <ProfilePage /> }
+          { path: "/profile", element: <ProfilePage /> },
+          { path: "/admin/users", element: <AdminUsersPage /> }
         ]
       }
     ]

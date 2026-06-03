@@ -108,9 +108,41 @@ def resend_verification(db: Session, payload: EmailResend) -> User:
     return user
 
 
+def get_user_or_404(db: Session, user_id: int) -> User:
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+    return user
+
+
 def update_user(db: Session, user: User, payload: UserUpdate) -> User:
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def list_users(db: Session, skip: int = 0, limit: int = 50) -> list[User]:
+    return list(db.scalars(select(User).offset(skip).limit(limit).order_by(User.id)))
+
+
+def set_user_role(db: Session, user: User, role: str) -> User:
+    user.role = role
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def delete_user(db: Session, user: User) -> None:
+    db.delete(user)
+    db.commit()
+
+
+def set_user_status(db: Session, user: User, is_active: bool) -> User:
+    user.is_active = is_active
     db.add(user)
     db.commit()
     db.refresh(user)
