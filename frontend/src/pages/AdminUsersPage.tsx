@@ -48,7 +48,6 @@ export function AdminUsersPage() {
 
   return (
     <section>
-      <Typography.Title level={2}>用户管理</Typography.Title>
       <Table
         rowKey="id"
         loading={loading}

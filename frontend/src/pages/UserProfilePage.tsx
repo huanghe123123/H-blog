@@ -87,7 +87,6 @@ export function UserProfilePage() {
     <section>
       {editing ? (
         <>
-          <Typography.Title level={2}>编辑资料</Typography.Title>
           <Form form={form} layout="vertical" onFinish={onFinish}>
             <Form.Item label="昵称" name="nickname">
               <Input maxLength={80} />
@@ -116,10 +115,6 @@ export function UserProfilePage() {
         </>
       ) : (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <Typography.Title level={2} style={{ margin: 0 }}>{isOwn ? "个人资料" : "用户主页"}</Typography.Title>
-            {isOwn && <Button icon={<Edit3 size={16} />} onClick={() => setEditing(true)}>编辑</Button>}
-          </div>
           <Card>
             <Space align="start" size={20}>
               <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} />
@@ -131,6 +126,7 @@ export function UserProfilePage() {
                   <Tag color={profile.role === "admin" ? "red" : profile.role === "moderator" ? "blue" : "default"}>
                     {roleLabels[profile.role] || profile.role}
                   </Tag>
+                  {isOwn && <Button type="text" size="small" icon={<Edit3 size={14} />} onClick={() => setEditing(true)} />}
                 </div>
                 <Typography.Text type="secondary">
                   {profile.nickname ? `@${profile.username} · ` : ""}{dayjs(profile.created_at).format("YYYY-MM-DD")} 加入

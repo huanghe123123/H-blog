@@ -70,12 +70,8 @@ export function PostEditorPage() {
   };
 
   return (
-    <section>
+    <section className="editor-layout">
       <div className="editor-main">
-        <Typography.Title level={2}>
-          {id ? "编辑文章" : "新建文章"}
-          {editingStatus === "draft" && <Tag color="orange" style={{ marginLeft: 12 }}>草稿</Tag>}
-        </Typography.Title>
         <Form form={form} layout="vertical">
           <Form.Item name="title" label="标题" rules={[{ required: true }]}>
             <Input maxLength={200} />
@@ -100,11 +96,11 @@ export function PostEditorPage() {
         className="draft-sidebar"
         style={{
           width: 260,
-          position: "fixed",
-          right: 0,
-          top: 80,
+          position: "sticky",
+          top: 16,
           maxHeight: "calc(100vh - 104px)",
           overflow: "auto",
+          flexShrink: 0,
         }}
       >
         <List

@@ -1,6 +1,6 @@
 import { Button, Card, Empty, Input, Popconfirm, Space, Typography, message } from "antd";
 import dayjs from "dayjs";
-import { Edit3, Search, Trash2 } from "lucide-react";
+import { Edit3, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deletePost, listPosts } from "../api/posts";
@@ -29,13 +29,12 @@ export function PostListPage() {
   return (
     <section>
       <div className="page-title-row">
-        <Typography.Title level={2}>文章</Typography.Title>
-        {user && <Button type="primary" onClick={() => navigate("/posts/new")}>新建文章</Button>}
+        <Space wrap>
+          <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} prefix={<Search size={16} />} placeholder="搜索标题、摘要、内容" onPressEnter={load} />
+          <Button onClick={load}>搜索</Button>
+        </Space>
+        {user && <Button type="primary" icon={<Plus size={18} />} onClick={() => navigate("/posts/new")} />}
       </div>
-      <Space className="toolbar" wrap>
-        <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} prefix={<Search size={16} />} placeholder="搜索标题、摘要、内容" onPressEnter={load} />
-        <Button onClick={load}>搜索</Button>
-      </Space>
       {posts.length === 0 ? (
         <Empty description="暂无文章" />
       ) : (
