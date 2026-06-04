@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getMe } from "../api/users";
 import { logout as logoutApi } from "../api/auth";
-import { TOKEN_KEY } from "../api/client";
 import type { User } from "../types";
 
 type AuthContextValue = {
@@ -18,15 +17,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    if (!localStorage.getItem(TOKEN_KEY)) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
     try {
       setUser(await getMe());
     } catch {
-      logoutApi();
       setUser(null);
     } finally {
       setLoading(false);
@@ -43,8 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       refresh,
       logout: () => {
-        logoutApi();
-        setUser(null);
+        logoutApi().finally(() => setUser(null));
       }
     }),
     [user, loading]

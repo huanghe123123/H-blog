@@ -1,5 +1,5 @@
-import { api, TOKEN_KEY } from "./client";
-import type { Token, User } from "../types";
+import { api } from "./client";
+import type { User } from "../types";
 
 export async function register(payload: { username: string; email: string; password: string }) {
   const { data } = await api.post<User>("/auth/register", payload);
@@ -7,9 +7,17 @@ export async function register(payload: { username: string; email: string; passw
 }
 
 export async function login(payload: { identifier: string; password: string }) {
-  const { data } = await api.post<Token>("/auth/login", payload);
-  localStorage.setItem(TOKEN_KEY, data.access_token);
+  const { data } = await api.post<User>("/auth/login", payload);
   return data;
+}
+
+export async function refresh() {
+  const { data } = await api.post<User>("/auth/refresh");
+  return data;
+}
+
+export async function logout() {
+  await api.post("/auth/logout");
 }
 
 export async function verifyEmail(token: string) {
@@ -20,8 +28,4 @@ export async function verifyEmail(token: string) {
 export async function resendVerification(email: string) {
   const { data } = await api.post<{ message: string }>("/auth/resend-verification", { email });
   return data;
-}
-
-export function logout() {
-  localStorage.removeItem(TOKEN_KEY);
 }

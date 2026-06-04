@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
@@ -18,13 +19,40 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(subject: str) -> str:
     settings = get_settings()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    return jwt.encode({"sub": subject, "exp": expire}, settings.secret_key, algorithm=settings.algorithm)
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
+    return jwt.encode(
+        {
+            "sub": subject,
+            "jti": uuid.uuid4().hex,
+            "type": "access",
+            "iat": now,
+            "exp": expire,
+        },
+        settings.secret_key,
+        algorithm=settings.algorithm,
+    )
 
 
-def decode_access_token(token: str) -> str | None:
+def create_refresh_token(subject: str) -> str:
+    settings = get_settings()
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(days=settings.refresh_token_expire_days)
+    return jwt.encode(
+        {
+            "sub": subject,
+            "jti": uuid.uuid4().hex,
+            "type": "refresh",
+            "iat": now,
+            "exp": expire,
+        },
+        settings.secret_key,
+        algorithm=settings.algorithm,
+    )
+
+
+def decode_token(token: str) -> dict | None:
     try:
-        payload = jwt.decode(token, get_settings().secret_key, algorithms=[get_settings().algorithm])
-        return payload.get("sub")
+        return jwt.decode(token, get_settings().secret_key, algorithms=[get_settings().algorithm])
     except JWTError:
         return None

@@ -1,37 +1,46 @@
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.roles import UserRole
 from app.db.session import get_db
 from app.models.user import User
-from app.utils.security import decode_access_token
+from app.services.auth_service import cleanup_expired, is_blacklisted
+from app.utils.security import decode_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
-
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="请先登录")
-    subject = decode_access_token(token)
-    if not subject:
+    payload = decode_token(token)
+    if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="登录凭据无效")
-    user = db.get(User, int(subject))
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="无效的 token 类型")
+    jti = payload.get("jti")
+    if jti and is_blacklisted(db, jti):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="登录凭据已吊销")
+    user = db.get(User, int(payload["sub"]))
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户不存在或已被停用")
+    cleanup_expired(db)
     return user
 
 
-def get_optional_user(db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme)) -> Optional[User]:
+def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Returns User if logged in, None for guests."""
+    token = request.cookies.get("access_token")
     if not token:
         return None
-    subject = decode_access_token(token)
-    if not subject:
+    payload = decode_token(token)
+    if not payload or payload.get("type") != "access":
         return None
-    user = db.get(User, int(subject))
+    jti = payload.get("jti")
+    if jti and is_blacklisted(db, jti):
+        return None
+    user = db.get(User, int(payload["sub"]))
     if not user or not user.is_active:
         return None
     return user

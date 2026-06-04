@@ -51,8 +51,11 @@ def _build_defaults(yml: dict) -> dict:
         # Auth
         "secret_key": auth.get("secret_key", "change-me-in-production"),
         "algorithm": auth.get("algorithm", "HS256"),
-        "access_token_expire_minutes": auth.get("access_token_expire_minutes", 1440),
+        "access_token_expire_minutes": auth.get("access_token_expire_minutes", 15),
+        "refresh_token_expire_days": auth.get("refresh_token_expire_days", 7),
         "verification_token_expire_seconds": auth.get("verification_token_expire_seconds", 1200),
+        "cookie_secure": auth.get("cookie_secure", False),
+        "cookie_samesite": auth.get("cookie_samesite", "lax"),
         "rate_limit_login": auth.get("rate_limit_login", "5/minute"),
         "rate_limit_register": auth.get("rate_limit_register", "3/minute"),
         # Email
@@ -90,8 +93,11 @@ class Settings(BaseSettings):
     # Auth
     secret_key: str = "change-me-in-production"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 1440
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
     verification_token_expire_seconds: int = 1200
+    cookie_secure: bool = False
+    cookie_samesite: str = "lax"
     rate_limit_login: str = "5/minute"
     rate_limit_register: str = "3/minute"
 
