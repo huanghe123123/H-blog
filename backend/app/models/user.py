@@ -19,6 +19,7 @@ class User(Base):
     birthday: Mapped[datetime | None] = mapped_column(Date)
     gender: Mapped[str | None] = mapped_column(String(10))
     role: Mapped[str] = mapped_column(String(30), default="user", nullable=False)
+    github_id: Mapped[str | None] = mapped_column(String(30), unique=True, nullable=True, default=None)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     verification_token: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)

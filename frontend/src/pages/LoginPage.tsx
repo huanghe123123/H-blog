@@ -1,4 +1,5 @@
-import { Button, Card, Form, Input, Modal, Tabs, Typography, message } from "antd";
+import { Button, Card, Divider, Form, Input, Modal, Tabs, Typography, message } from "antd";
+import { GithubOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, register, resendVerification, verifyEmail } from "../api/auth";
@@ -141,6 +142,12 @@ export function LoginPage() {
             }
           ]}
         />
+        <Divider plain>或</Divider>
+        <Button block icon={<GithubOutlined />} onClick={() => {
+          window.location.href = `${import.meta.env.VITE_API_BASE_URL ?? "/api"}/auth/github`;
+        }}>
+          使用 GitHub 登录
+        </Button>
         <div style={{ textAlign: "center", marginTop: 16 }}>
           <Button type="link" onClick={() => navigate("/")}>暂不登录</Button>
         </div>

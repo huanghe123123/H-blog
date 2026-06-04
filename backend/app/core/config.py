@@ -31,6 +31,7 @@ def _build_defaults(yml: dict) -> dict:
     email = yml.get("email", {})
     frontend = yml.get("frontend", {})
     features = yml.get("features", {})
+    github = yml.get("github", {})
     theme = yml.get("theme", {})
 
     site_name = site.get("name", "My Blog")
@@ -71,6 +72,10 @@ def _build_defaults(yml: dict) -> dict:
         "primary_color": theme.get("primary_color", "#1f6feb"),
         "border_radius": theme.get("border_radius", 6),
         "locale": theme.get("locale", "zh-CN"),
+        # GitHub OAuth
+        "github_client_id": github.get("client_id", ""),
+        "github_client_secret": github.get("client_secret", ""),
+        "github_redirect_uri": github.get("redirect_uri", f"{frontend.get('url', 'http://localhost:5173')}/api/auth/github/callback"),
         # Features
         "email_verification_enabled": features.get("email_verification", True),
         "comments_enabled": features.get("comments_enabled", True),
@@ -116,6 +121,11 @@ class Settings(BaseSettings):
     primary_color: str = "#1f6feb"
     border_radius: int = 6
     locale: str = "zh-CN"
+
+    # GitHub OAuth
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    github_redirect_uri: str = "http://localhost:5173/api/auth/github/callback"
 
     # Features
     email_verification_enabled: bool = True
