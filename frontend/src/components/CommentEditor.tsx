@@ -4,34 +4,36 @@ import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useRef, useState } from "react";
 
-const extensions = [
-  StarterKit.configure({
-    heading: false,
-    blockquote: false,
-    codeBlock: false,
-    horizontalRule: false,
-    bulletList: false,
-    orderedList: false,
-  }),
-  LinkExtension.configure({ openOnClick: false }),
-  Placeholder.configure({ placeholder: "写下你的评论..." }),
-];
+interface CommentEditorProps {
+  value?: string;
+  onChange?: (html: string) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+}
 
 const EMOJI_LIST = [
   "😀","😂","🤣","😊","😍","🥰","😎","🤩","😏","😢","😡","👍","👎","🎉","🔥",
   "❤️","💔","✨","⭐","💯","🙏","💪","👏","🤝","🤔","🙄","😅","🫡","💀","🤖",
 ];
 
-interface CommentEditorProps {
-  value?: string;
-  onChange?: (html: string) => void;
-}
-
-export function CommentEditor({ value, onChange }: CommentEditorProps) {
+export function CommentEditor({ value, onChange, placeholder, autoFocus }: CommentEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const [, forceUpdate] = useState(0);
   const [emojiOpen, setEmojiOpen] = useState(false);
+
+  const extensions = [
+    StarterKit.configure({
+      heading: false,
+      blockquote: false,
+      codeBlock: false,
+      horizontalRule: false,
+      bulletList: false,
+      orderedList: false,
+    }),
+    LinkExtension.configure({ openOnClick: false }),
+    Placeholder.configure({ placeholder: placeholder ?? "写下你的评论..." }),
+  ];
 
   const editor = useEditor({
     extensions,
@@ -55,6 +57,14 @@ export function CommentEditor({ value, onChange }: CommentEditorProps) {
       editor.commands.setContent(target);
     }
   }, [value, editor]);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    if (autoFocus && editor) {
+      const timer = setTimeout(() => editor.commands.focus(), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus, editor]);
 
   if (!editor) return null;
 

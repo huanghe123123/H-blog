@@ -42,7 +42,11 @@ export type Comment = {
   content: string;
   user_id: number;
   post_id: number;
+  parent_id: number | null;
+  reply_to_user: UserBrief | null;
+  reply_preview: string | null;
   user: UserBrief;
+  replies: Comment[];
   created_at: string;
   updated_at: string;
 };
