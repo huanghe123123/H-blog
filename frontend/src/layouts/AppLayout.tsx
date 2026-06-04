@@ -22,16 +22,13 @@ export function AppLayout() {
   const menuItems = user
     ? [
         { key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> },
-        { key: `/users/${user.id}`, icon: <UserRound size={18} />, label: <Link to={`/users/${user.id}`}>资料</Link> },
         ...(user.role === "admin" ? [{ key: "/admin/users", icon: <Shield size={18} />, label: <Link to="/admin/users">用户管理</Link> }] : [])
       ]
     : [{ key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> }];
 
   const selectedKey = location.pathname.startsWith("/admin")
     ? "/admin/users"
-    : location.pathname.startsWith("/users")
-      ? `/users/${user?.id ?? ""}`
-      : "/";
+    : "/";
 
   return (
     <Layout className="app-shell">

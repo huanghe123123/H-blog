@@ -17,7 +17,9 @@ export function PostEditorPage() {
   const [editingStatus, setEditingStatus] = useState<PostStatus | null>(null);
 
   const loadDrafts = useCallback(async () => {
-    setDrafts(await listPosts({ status: "draft" as PostStatus }));
+    try {
+      setDrafts(await listPosts({ status: "draft" as PostStatus }));
+    } catch { /* 草稿加载失败不影响编辑 */ }
   }, []);
 
   useEffect(() => {
