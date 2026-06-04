@@ -12,6 +12,7 @@ class PostBase(BaseModel):
     summary: str | None = Field(default=None, max_length=500)
     content: str = Field(min_length=1)
     cover_url: str | None = Field(default=None, max_length=500)
+    tags: list[str] | None = None
     status: PostStatus = PostStatus.draft
 
 
@@ -33,6 +34,7 @@ class PostPublic(ORMModel):
     summary: str | None
     content: str
     cover_url: str | None
+    tags: list[str] | None
     status: str
     view_count: int
     author_id: int
@@ -47,6 +49,7 @@ class PostList(ORMModel):
     title: str
     summary: str | None
     cover_url: str | None
+    tags: list[str] | None
     status: str
     view_count: int
     author_id: int

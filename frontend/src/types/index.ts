@@ -27,6 +27,7 @@ export type Post = {
   summary?: string | null;
   content: string;
   cover_url?: string | null;
+  tags?: string[] | null;
   status: PostStatus;
   view_count: number;
   author_id: number;

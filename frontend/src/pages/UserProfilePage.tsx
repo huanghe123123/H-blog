@@ -151,45 +151,46 @@ export function UserProfilePage() {
         </>
       )}
 
-      <Typography.Title level={4} style={{ marginTop: 24 }}>{isOwn ? "我的文章" : "Ta 的文章"}</Typography.Title>
-      {posts.length === 0 ? (
-        <Empty description="暂无文章" />
-      ) : (
-        <Space direction="vertical" size={16} style={{ width: "100%" }}>
-          {posts.map((post) => (
-            <Card
-              key={post.id}
-              hoverable
-              onClick={() => navigate(`/posts/${post.id}`)}
-              className="post-card"
-            >
-              <div className="post-card-inner">
-                {post.cover_url && (
-                  <div className="post-card-cover">
-                    <img src={post.cover_url} alt={post.title} />
-                  </div>
-                )}
-                <div className="post-card-body">
-                  <Typography.Title level={4} className="post-card-title" ellipsis={{ rows: 1 }}>
-                    {post.status === "draft" && <Tag color="orange" style={{ marginRight: 8 }}>草稿</Tag>}
-                    {post.title}
-                  </Typography.Title>
-                  {post.summary && (
-                    <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="post-card-summary">
-                      {post.summary}
-                    </Typography.Paragraph>
+      <Card title={isOwn ? "我的文章" : "Ta 的文章"} style={{ marginTop: 16 }}>
+        {posts.length === 0 ? (
+          <Empty description="暂无文章" />
+        ) : (
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            {posts.map((post) => (
+              <Card
+                key={post.id}
+                hoverable
+                onClick={() => navigate(`/posts/${post.id}`)}
+                className="post-card"
+              >
+                <div className="post-card-inner">
+                  {post.cover_url && (
+                    <div className="post-card-cover">
+                      <img src={post.cover_url} alt={post.title} />
+                    </div>
                   )}
-                  <div className="post-card-footer">
-                    <Typography.Text type="secondary" className="post-card-meta">
-                      {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
-                    </Typography.Text>
+                  <div className="post-card-body">
+                    <Typography.Title level={4} className="post-card-title" ellipsis={{ rows: 1 }}>
+                      {post.status === "draft" && <Tag color="orange" style={{ marginRight: 8 }}>草稿</Tag>}
+                      {post.title}
+                    </Typography.Title>
+                    {post.summary && (
+                      <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="post-card-summary">
+                        {post.summary}
+                      </Typography.Paragraph>
+                    )}
+                    <div className="post-card-footer">
+                      <Typography.Text type="secondary" className="post-card-meta">
+                        {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+                      </Typography.Text>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </Space>
-      )}
+              </Card>
+            ))}
+          </Space>
+        )}
+      </Card>
     </section>
   );
 }

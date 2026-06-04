@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
@@ -24,15 +27,46 @@ def list_all(
     limit: int = Query(20, ge=1, le=100),
     status_filter: PostStatus | None = Query(default=None, alias="status"),
     author_id: int | None = Query(default=None),
+    sort_by: Literal["created_at", "views", "likes", "score"] | None = Query(default=None),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
 ):
-    return list_posts(db, skip=skip, limit=limit, status_filter=status_filter.value if status_filter else None, user=current_user, author_id=author_id)
+    return list_posts(
+        db,
+        skip=skip,
+        limit=limit,
+        status_filter=status_filter.value if status_filter else None,
+        user=current_user,
+        author_id=author_id,
+        sort_by=sort_by,
+        date_from=date_from,
+        date_to=date_to,
+    )
 
 
 @router.get("/search", response_model=list[PostList])
-def search(keyword: str = Query(min_length=1), skip: int = 0, limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
-    return search_posts(db, keyword=keyword, skip=skip, limit=limit)
+def search(
+    keyword: str = Query(min_length=1),
+    skip: int = 0,
+    limit: int = Query(20, ge=1, le=100),
+    sort_by: Literal["created_at", "views", "likes", "score"] | None = Query(default=None),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    fuzzy: bool = Query(False),
+    db: Session = Depends(get_db),
+):
+    return search_posts(
+        db,
+        keyword=keyword,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by,
+        date_from=date_from,
+        date_to=date_to,
+        fuzzy=fuzzy,
+    )
 
 
 @router.get("/{post_id}", response_model=PostPublic)

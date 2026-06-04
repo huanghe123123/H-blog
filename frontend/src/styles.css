@@ -10,6 +10,10 @@ body {
   color: #1f2328;
 }
 
+.ant-card {
+  background: transparent !important;
+}
+
 .app-shell {
   min-height: 100vh;
   padding: 16px;

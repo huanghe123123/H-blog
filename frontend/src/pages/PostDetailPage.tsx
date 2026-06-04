@@ -1,5 +1,5 @@
 import MDEditor from "@uiw/react-md-editor";
-import { Button, Divider, Form, Input, List, Popconfirm, Space, Typography, message } from "antd";
+import { Button, Divider, Form, Input, List, Popconfirm, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -58,6 +58,16 @@ export function PostDetailPage() {
           <Typography.Text type="secondary">
             <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
           </Typography.Text>
+          {post.tags && post.tags.length > 0 && (
+            <Space size={4} wrap style={{ marginTop: 8 }}>
+              {post.tags.map((tag) => (
+                <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/?keyword=${encodeURIComponent(tag)}`)}>
+                  {tag}
+                </Tag>
+              ))}
+            </Space>
+          )}
         </div>
         <Space>
           <LikeButton targetType="post" targetId={post.id} />

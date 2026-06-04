@@ -1,5 +1,5 @@
 import MDEditor from "@uiw/react-md-editor";
-import { Button, Card, Form, Input, List, Space, Tag, Typography, message } from "antd";
+import { Button, Card, Form, Input, List, Select, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { FileText } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -34,6 +34,7 @@ export function PostEditorPage() {
         summary: post.summary || undefined,
         content: post.content,
         cover_url: post.cover_url || undefined,
+        tags: post.tags || undefined,
       });
       setContent(post.content);
       setEditingStatus(post.status);
@@ -63,6 +64,7 @@ export function PostEditorPage() {
       summary: draft.summary || undefined,
       content: draft.content,
       cover_url: draft.cover_url || undefined,
+      tags: draft.tags || undefined,
     });
     setContent(draft.content);
     setEditingStatus("draft");
@@ -81,6 +83,9 @@ export function PostEditorPage() {
           </Form.Item>
           <Form.Item name="cover_url" label="封面 URL">
             <Input maxLength={500} />
+          </Form.Item>
+          <Form.Item name="tags" label="标签">
+            <Select mode="tags" placeholder="输入标签后按回车" style={{ width: "100%" }} />
           </Form.Item>
           <div className="editor-wrap" data-color-mode="light">
             <MDEditor value={content} onChange={(value) => setContent(value || "")} height={420} />
