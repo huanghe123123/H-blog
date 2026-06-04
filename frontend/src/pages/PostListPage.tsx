@@ -15,7 +15,7 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "score", label: "综合排序" },
 ];
 
-export function PostListPage() {
+export function PostListPage({ showCreateButton = true }: { showCreateButton?: boolean }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -68,7 +68,7 @@ export function PostListPage() {
           <Button type="primary" onClick={load}>搜索</Button>
           <Checkbox checked={fuzzy} onChange={(e) => setFuzzy(e.target.checked)}>模糊搜索</Checkbox>
         </Space>
-        {user && <Button type="primary" icon={<Plus size={18} />} onClick={() => navigate("/posts/new")} />}
+        {showCreateButton && user && <Button type="primary" icon={<Plus size={18} />} onClick={() => navigate("/posts/new")} />}
       </div>
       {posts.length === 0 ? (
         <Empty description="暂无文章" />

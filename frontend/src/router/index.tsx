@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { AppLayout } from "../layouts/AppLayout";
 import { AdminUsersPage } from "../pages/AdminUsersPage";
+import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
@@ -21,7 +22,7 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { path: "/", element: <PostListPage /> },
+      { path: "/", element: <HomePage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
       { path: "/users/:id", element: <UserProfilePage /> },
       {
