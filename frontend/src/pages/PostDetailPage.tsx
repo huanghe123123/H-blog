@@ -1,11 +1,12 @@
 import MDEditor from "@uiw/react-md-editor";
-import { Button, Divider, Form, Input, List, Popconfirm, Space, Tag, Typography, message } from "antd";
+import { Button, Card, Divider, Pagination, Popconfirm, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { createComment, deleteComment, listComments } from "../api/comments";
 import { deletePost, getPost } from "../api/posts";
+import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
 import { useAuth } from "../hooks/useAuth";
 import type { Comment, Post } from "../types";
@@ -16,7 +17,10 @@ export function PostDetailPage() {
   const { user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [form] = Form.useForm<{ content: string }>();
+  const [commentContent, setCommentContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
   const postId = Number(id);
   const loadedId = useRef<number | null>(null);
 
@@ -44,10 +48,20 @@ export function PostDetailPage() {
     navigate("/");
   };
 
-  const onComment = async ({ content }: { content: string }) => {
-    await createComment(post.id, content);
-    form.resetFields();
-    await refreshComments();
+  const onComment = async () => {
+    const html = commentContent.trim();
+    if (!html) {
+      message.warning("请输入评论");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await createComment(post.id, html);
+      setCommentContent("");
+      await refreshComments();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -89,38 +103,55 @@ export function PostDetailPage() {
       <Divider />
       <Typography.Title level={3}>评论</Typography.Title>
       {user ? (
-        <Form form={form} layout="vertical" onFinish={onComment}>
-          <Form.Item name="content" rules={[{ required: true, message: "请输入评论" }]}>
-            <Input.TextArea rows={3} maxLength={3000} />
-          </Form.Item>
-          <Button type="primary" htmlType="submit">发布评论</Button>
-        </Form>
+        <>
+          <CommentEditor value={commentContent} onChange={setCommentContent} />
+          <Button type="primary" onClick={onComment} loading={submitting} style={{ marginTop: 12 }}>
+            发布评论
+          </Button>
+        </>
       ) : (
         <Typography.Text type="secondary">
           <Link to="/login">登录</Link>后即可评论
         </Typography.Text>
       )}
-      <List
-        className="comment-list"
-        dataSource={comments}
-        renderItem={(comment) => (
-          <List.Item
-            actions={[
-              <LikeButton key="like" targetType="comment" targetId={comment.id} />,
-              (user?.id === comment.user_id || user?.role === "admin") ? (
-                <Popconfirm key="delete" title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await refreshComments(); }}>
-                  <Button danger size="small" icon={<Trash2 size={14} />} />
-                </Popconfirm>
-              ) : null
-            ]}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {comments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((comment) => (
+          <Card
+            key={comment.id}
+            className="comment-card"
+            size="small"
+            title={
+              <span>
+                <Link to={`/users/${comment.user.id}`}>{comment.user.nickname || comment.user.username}</Link>
+                <span style={{ color: "#8b949e", marginLeft: 8, fontSize: 13, fontWeight: 400 }}>
+                  {dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")}
+                </span>
+              </span>
+            }
+            extra={
+              <Space size={4}>
+                <LikeButton targetType="comment" targetId={comment.id} />
+                {(user?.id === comment.user_id || user?.role === "admin") && (
+                  <Popconfirm title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await refreshComments(); }}>
+                    <Button danger size="small" icon={<Trash2 size={14} />} />
+                  </Popconfirm>
+                )}
+              </Space>
+            }
           >
-            <List.Item.Meta
-              title={<><Link to={`/users/${comment.user.id}`}>{comment.user.nickname || comment.user.username}</Link> · {dayjs(comment.created_at).format("YYYY-MM-DD HH:mm")}</>}
-              description={comment.content}
-            />
-          </List.Item>
-        )}
-      />
+            <div className="comment-content" dangerouslySetInnerHTML={{ __html: comment.content }} />
+          </Card>
+        ))}
+      </div>
+      {comments.length > PAGE_SIZE && (
+        <Pagination
+          current={page}
+          pageSize={PAGE_SIZE}
+          total={comments.length}
+          onChange={setPage}
+          style={{ marginTop: 20, textAlign: "center" }}
+        />
+      )}
     </article>
   );
 }

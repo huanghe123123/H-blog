@@ -6,10 +6,14 @@ from app.models.comment import Comment
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.comment import CommentCreate
+from app.utils.html_sanitizer import sanitize_html
 
 
 def create_comment(db: Session, post: Post, user: User, payload: CommentCreate) -> Comment:
-    comment = Comment(content=payload.content, post_id=post.id, user_id=user.id)
+    content = sanitize_html(payload.content)
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="评论内容不能为空")
+    comment = Comment(content=content, post_id=post.id, user_id=user.id)
     db.add(comment)
     db.commit()
     return get_comment_or_404(db, comment.id)
