@@ -60,16 +60,6 @@ export function PostCard({ post, coverOnTop = false, showCover = true, shadow = 
           <Typography.Text type="secondary" className="post-card-meta">
             <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
           </Typography.Text>
-          {post.tags && post.tags.length > 0 && (
-            <Space size={4} wrap style={{ marginTop: 6 }}>
-              {post.tags.map((tag) => (
-                <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
-                  onClick={(e) => { e.stopPropagation(); searchByTag(tag); }}>
-                  {tag}
-                </Tag>
-              ))}
-            </Space>
-          )}
           {showActions && (
             <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
               <LikeButton targetType="post" targetId={post.id} />
@@ -84,6 +74,16 @@ export function PostCard({ post, coverOnTop = false, showCover = true, shadow = 
             </Space>
           )}
         </div>
+        {post.tags && post.tags.length > 0 && (
+          <Space size={4} wrap style={{ marginTop: 6 }}>
+            {post.tags.map((tag) => (
+              <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); searchByTag(tag); }}>
+                {tag}
+              </Tag>
+            ))}
+          </Space>
+        )}
       </div>
     </div>
   );

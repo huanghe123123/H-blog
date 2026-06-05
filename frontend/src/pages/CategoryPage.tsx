@@ -52,7 +52,7 @@ export function CategoryPage() {
 
   return (
     <div className="profile-layout">
-      <Card title="文章分类" className="side-card" style={{ borderRadius: 0 }}>
+      <Card title="文章分类" className="side-card profile-left-card" style={{ borderRadius: 0 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {CATEGORIES.map((cat) => (
             <div
@@ -76,6 +76,20 @@ export function CategoryPage() {
         </div>
       </Card>
       <div className="profile-center">
+        <div className="category-nav-horizontal">
+          {CATEGORIES.map((cat) => (
+            <div
+              key={cat.key}
+              onClick={() => onCategoryChange(cat.key)}
+              className={`category-nav-horizontal-item${active === cat.key ? " active" : ""}`}
+              style={{
+                "--cat-color": cat.color,
+              } as React.CSSProperties}
+            >
+              {cat.label}
+            </div>
+          ))}
+        </div>
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: 16 }}>
           <Select value={sortBy} options={SORT_OPTIONS} style={{ width: 120 }} onChange={onSortChange} />
         </div>

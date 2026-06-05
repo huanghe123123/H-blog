@@ -201,6 +201,8 @@ body {
 .comment-content {
   font-size: 14px;
   line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-replies {
@@ -266,6 +268,8 @@ body {
   outline: none;
   font-size: 14px;
   line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .comment-editor .tiptap p.is-editor-empty:first-child::before {
@@ -518,19 +522,27 @@ body {
 /* Three-column layout */
 .profile-layout {
   display: grid;
-  grid-template-columns: 1fr 2.6fr 1.2fr;
-  gap: 24px;
-  width: 80%;
+  grid-template-columns: 280px 650px 300px;
+  gap: clamp(12px, 2vw, 24px);
+  justify-content: center;
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 clamp(0px, 12vw - 96px, 60px);
+  box-sizing: border-box;
   align-items: start;
 }
 
 .post-detail-layout {
   display: grid;
-  grid-template-columns: 1fr 2.6fr 1.2fr;
-  gap: 24px;
-  width: 80%;
+  grid-template-columns: 280px 650px 300px;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 24px);
+  width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 clamp(0px, 12vw - 96px, 60px);
+  box-sizing: border-box;
   align-items: start;
 }
 
@@ -823,5 +835,71 @@ body {
 
   .draft-sidebar {
     display: none;
+  }
+}
+
+.category-nav-horizontal {
+  display: none;
+  gap: 2px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-nav-horizontal-item {
+  flex: 1 0 auto;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.category-nav-horizontal-item:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.category-nav-horizontal-item.active {
+  border-left-color: var(--cat-color);
+  background: color-mix(in srgb, var(--cat-color) 7%, transparent);
+  color: var(--cat-color);
+  font-weight: 600;
+}
+
+@media (max-width: 1240px) {
+  .profile-layout,
+  .post-detail-layout {
+    grid-template-columns: 280px 650px;
+  }
+  .profile-right-col,
+  .post-detail-right {
+    display: none;
+  }
+}
+
+@media (max-width: 958px) {
+  .profile-layout,
+  .post-detail-layout {
+    grid-template-columns: minmax(300px, 1fr);
+    padding: 0 12px;
+  }
+  .profile-left-card {
+    display: none;
+  }
+  .profile-center {
+    grid-column: 1;
+  }
+  .category-nav-horizontal {
+    display: flex;
   }
 }

@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { createBrowserRouter } from "react-router-dom";
-import { ProtectedRoute } from "../components/ProtectedRoute";
+import { AdminRoute, ProtectedRoute } from "../components/ProtectedRoute";
 import { AppLayout } from "../layouts/AppLayout";
 import { AdminUsersPage } from "../pages/AdminUsersPage";
 import { CategoryPage } from "../pages/CategoryPage";
@@ -35,6 +35,11 @@ export const router = createBrowserRouter([
           { path: "/posts/new", element: <PostEditorPage /> },
           { path: "/posts/:id/edit", element: <PostEditorPage /> },
           { path: "/profile", element: <ProfileRedirect /> },
+        ]
+      },
+      {
+        element: <AdminRoute />,
+        children: [
           { path: "/admin/users", element: <AdminUsersPage /> }
         ]
       }
