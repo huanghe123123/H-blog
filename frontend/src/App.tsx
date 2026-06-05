@@ -27,7 +27,16 @@ export default function App() {
   return (
     <ConfigProvider
       locale={config.locale === "zh-CN" ? zhCN : undefined}
-      theme={{ token: { borderRadius: config.border_radius, colorPrimary: config.primary_color } }}
+      theme={{
+        token: {
+          borderRadius: config.border_radius,
+          colorPrimary: "#49B1F5",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+          colorBgLayout: "#f7f9fe",
+          colorBgContainer: "#ffffff",
+          colorBorderSecondary: "#e8eaed",
+        }
+      }}
     >
       <AntApp>
         <AuthProvider>

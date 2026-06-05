@@ -274,7 +274,7 @@ export function UserProfilePage() {
                 }}
               >
                 <span>{year}</span>
-                <Badge count={yearGroups.get(year)!.length} overflowCount={999} style={{ backgroundColor: "#d8dee4", color: "#57606a" }} />
+                <Badge count={yearGroups.get(year)!.length} overflowCount={999} style={{ backgroundColor: "var(--border)", color: "var(--text-secondary)" }} />
               </div>
             ))
           )}
