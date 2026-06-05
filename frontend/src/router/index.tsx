@@ -7,7 +7,7 @@ import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
-import { PostListPage } from "../pages/PostListPage";
+import { SearchPage } from "../pages/SearchPage";
 import { UserProfilePage } from "../pages/UserProfilePage";
 import { useAuth } from "../hooks/useAuth";
 
@@ -23,6 +23,7 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/posts/search", element: <SearchPage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
       { path: "/users/:id", element: <UserProfilePage /> },
       {

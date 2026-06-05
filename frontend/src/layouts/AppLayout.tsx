@@ -19,6 +19,18 @@ export function AppLayout() {
     fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
   }, []);
 
+  useEffect(() => {
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has("keyword") && location.pathname !== "/posts/search") {
+      const keyword = params.get("keyword") || "";
+      navigate(`/posts/search?keyword=${encodeURIComponent(keyword)}`, { replace: true });
+    }
+  }, [location.pathname, location.search]);
+
   const menuItems = user
     ? [
         { key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> },
@@ -54,7 +66,7 @@ export function AppLayout() {
         <Outlet />
       </Content>
       <Modal open={searchOpen} onCancel={() => setSearchOpen(false)} footer={null} width="90vw" style={{ top: 24 }}>
-        <PostListPage showCreateButton={false} />
+        <PostListPage showCreateButton={false} syncUrl={false} />
       </Modal>
       {user && (
         <Button

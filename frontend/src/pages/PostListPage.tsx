@@ -16,10 +16,10 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "score", label: "综合排序" },
 ];
 
-export function PostListPage({ showCreateButton = true }: { showCreateButton?: boolean }) {
+export function PostListPage({ showCreateButton = true, syncUrl = true }: { showCreateButton?: boolean; syncUrl?: boolean }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
   const [sortBy, setSortBy] = useState<SortBy>("created_at");
@@ -28,6 +28,7 @@ export function PostListPage({ showCreateButton = true }: { showCreateButton?: b
   const [fuzzy, setFuzzy] = useState(false);
 
   const load = async () => {
+    if (syncUrl) setSearchParams(keyword ? { keyword } : {}, { replace: true });
     setPosts(await listPosts({
       keyword: keyword || undefined,
       sort_by: sortBy,
@@ -38,8 +39,7 @@ export function PostListPage({ showCreateButton = true }: { showCreateButton?: b
   };
 
   const searchByTag = (tag: string) => {
-    setKeyword(tag);
-    listPosts({ keyword: tag, sort_by: sortBy }).then(setPosts);
+    navigate(`/posts/search?keyword=${encodeURIComponent(tag)}`);
   };
 
   useEffect(() => {
