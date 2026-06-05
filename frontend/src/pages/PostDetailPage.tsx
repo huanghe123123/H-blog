@@ -91,7 +91,7 @@ export function PostDetailPage() {
   const onDeletePost = async () => {
     await deletePost(post.id);
     message.success("文章已删除");
-    navigate("/");
+    navigate(-1);
   };
 
   const onComment = async () => {
@@ -134,8 +134,7 @@ export function PostDetailPage() {
           publishedCount={publishedCount}
           yearsCount={yearsCount}
           age={authorAge}
-          isOwn={user?.id === authorProfile.id}
-          onEdit={() => navigate(`/users/${authorProfile.id}`)}
+          isOwn={false}
         />
       )}
       <article className="post-detail">

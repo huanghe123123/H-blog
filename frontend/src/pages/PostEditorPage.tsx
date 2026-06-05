@@ -1,7 +1,7 @@
 import MDEditor from "@uiw/react-md-editor";
 import { Button, Card, Form, Input, List, Select, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
-import { FileText } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createPost, getPost, listPosts, updatePost } from "../api/posts";
@@ -44,6 +44,10 @@ export function PostEditorPage() {
   }, [id, form, loadDrafts]);
 
   const submit = async (status: PostStatus) => {
+    if (!content || !content.replace(/<[^>]*>/g, "").trim()) {
+      message.warning("内容不可为空");
+      return;
+    }
     try {
       const values = await form.validateFields();
       const payload = { ...values, content, status };
@@ -76,6 +80,9 @@ export function PostEditorPage() {
   return (
     <section className="editor-layout">
       <div className="editor-main">
+        <Button type="text" icon={<ArrowLeft size={18} />} onClick={() => navigate(-1)} style={{ marginBottom: 12 }}>
+          返回
+        </Button>
         <Form form={form} layout="vertical">
           <Form.Item name="title" label="标题" rules={[{ required: true }]}>
             <Input maxLength={200} />

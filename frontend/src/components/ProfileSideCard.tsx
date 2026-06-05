@@ -1,5 +1,6 @@
 import { Avatar, Button, Card, Tag, Typography } from "antd";
 import { Edit3, UserRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 
 const genderLabels: Record<string, string> = { male: "男", female: "女", other: "其他" };
@@ -15,10 +16,11 @@ interface ProfileSideCardProps {
 }
 
 export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOwn, onEdit }: ProfileSideCardProps) {
+  const navigate = useNavigate();
   return (
     <Card className="side-card profile-left-card">
       <div className="side-profile">
-        <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} />
+        <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} style={{ cursor: "pointer" }} onClick={() => navigate(`/users/${profile.id}`)} />
         <Typography.Title level={4} style={{ margin: "12px 0 4px" }}>
           {profile.nickname || profile.username}
         </Typography.Title>

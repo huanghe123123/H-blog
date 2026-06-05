@@ -1,6 +1,7 @@
 import { Button, Popconfirm, Select, Switch, Table, Tag, Typography, message } from "antd";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { deleteUser, listUsers, updateUserRole, updateUserStatus, type AdminUser } from "../api/admin";
 import { useAuth } from "../hooks/useAuth";
 
@@ -54,7 +55,7 @@ export function AdminUsersPage() {
         dataSource={users}
         columns={[
           { title: "ID", dataIndex: "id", width: 60 },
-          { title: "用户名", dataIndex: "username" },
+          { title: "用户名", dataIndex: "username", render: (v, record) => <Link to={`/users/${record.id}`}>{v}</Link> },
           { title: "邮箱", dataIndex: "email" },
           { title: "昵称", dataIndex: "nickname", render: (v) => v || "-" },
           {
