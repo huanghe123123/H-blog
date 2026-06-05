@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Response, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.comment import CommentCreate, CommentPublic
@@ -20,6 +22,20 @@ def read_me(current_user: User = Depends(get_current_user)):
 @router.put("/me", response_model=UserPublic)
 def update_me(payload: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return update_user(db, current_user, payload)
+
+
+@router.get("/owner", response_model=UserProfile)
+def get_site_owner(db: Session = Depends(get_db)):
+    settings = get_settings()
+    owner = None
+    if settings.site_owner:
+        owner = db.scalar(select(User).where(User.username == settings.site_owner))
+    if not owner:
+        owner = db.scalar(select(User).order_by(User.id.asc()).limit(1))
+    if not owner:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="No users found")
+    return owner
 
 
 @router.get("/{user_id}", response_model=UserProfile)

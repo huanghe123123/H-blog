@@ -20,6 +20,7 @@ export async function listPosts(params?: {
   date_from?: string;
   date_to?: string;
   fuzzy?: boolean;
+  limit?: number;
 }) {
   const endpoint = params?.keyword ? "/posts/search" : "/posts";
   const query: Record<string, string> = {};
@@ -30,6 +31,7 @@ export async function listPosts(params?: {
   if (params?.date_from) query.date_from = params.date_from;
   if (params?.date_to) query.date_to = params.date_to;
   if (params?.fuzzy) query.fuzzy = "true";
+  if (params?.limit) query.limit = String(params.limit);
   const { data } = await api.get<Post[]>(endpoint, { params: query });
   return data;
 }

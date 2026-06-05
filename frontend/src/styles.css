@@ -406,6 +406,38 @@ body {
   }
 }
 
+/* Cover-on-top card (homepage hot posts) */
+.post-card-cover-top .ant-card-body {
+  padding: 0;
+}
+
+.post-card-inner-vertical {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-card-cover-top-img {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.post-card-cover-top-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-card-body-top {
+  padding: 20px;
+}
+
+.site-desc .wmde-markdown,
+.site-desc .wmde-markdown * {
+  color: var(--desc-color) !important;
+}
+
 .fab {
   position: fixed;
   bottom: 32px;

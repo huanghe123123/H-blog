@@ -46,6 +46,9 @@ def _build_defaults(yml: dict) -> dict:
         "app_name": f"{site_name} API",
         "site_name": site_name,
         "site_description": site.get("description", ""),
+        "site_owner": site.get("owner", ""),
+        "site_name_color": site.get("name_color", "#1f2d3d"),
+        "site_description_color": site.get("description_color", "#6c757e"),
         "api_prefix": server.get("api_prefix", "/api"),
         # Database
         "database_url": f"postgresql+psycopg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}",
@@ -90,6 +93,9 @@ class Settings(BaseSettings):
     app_name: str = "My Blog API"
     site_name: str = "My Blog"
     site_description: str = ""
+    site_owner: str = ""
+    site_name_color: str = "#1f2d3d"
+    site_description_color: str = "#6c757e"
     api_prefix: str = "/api"
 
     # Database

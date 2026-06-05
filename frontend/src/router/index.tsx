@@ -23,6 +23,7 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/index", element: <HomePage /> },
       { path: "/posts/search", element: <SearchPage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
       { path: "/users/:id", element: <UserProfilePage /> },

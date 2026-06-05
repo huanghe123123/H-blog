@@ -15,8 +15,14 @@
 site:
   # 博客名称，会显示在页面标题、导航栏、登录页等位置
   name: "My Blog"
-  # 副标题或简介（可选）
+  # 名称文字颜色（CSS 颜色值）
+  name_color: "#1f2d3d"
+  # 副标题或简介（可选，支持 Markdown）
   description: "A modern blog built with FastAPI and React"
+  # 简介文字颜色（CSS 颜色值）
+  description_color: "#6c757e"
+  # 站长的用户名，留空则自动使用第一个注册用户
+  owner: ""
 
 # ---------------------------------------------------------------------------
 # 服务端口

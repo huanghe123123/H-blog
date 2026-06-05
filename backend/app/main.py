@@ -44,6 +44,9 @@ def public_config():
     return {
         "site_name": settings.site_name,
         "site_description": settings.site_description,
+        "site_owner": settings.site_owner,
+        "site_name_color": settings.site_name_color,
+        "site_description_color": settings.site_description_color,
         "primary_color": settings.primary_color,
         "border_radius": settings.border_radius,
         "locale": settings.locale,

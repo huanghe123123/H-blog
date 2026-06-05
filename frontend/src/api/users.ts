@@ -11,6 +11,11 @@ export async function getUserProfile(id: number) {
   return data;
 }
 
+export async function getSiteOwner() {
+  const { data } = await api.get<UserProfile>("/users/owner");
+  return data;
+}
+
 export async function updateMe(payload: Partial<Pick<User, "nickname" | "avatar_url" | "bio" | "birthday" | "gender">>) {
   const { data } = await api.put<User>("/users/me", payload);
   return data;

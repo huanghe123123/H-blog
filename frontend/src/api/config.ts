@@ -3,6 +3,9 @@ import { api } from "./client";
 export type SiteConfig = {
   site_name: string;
   site_description: string;
+  site_owner: string;
+  site_name_color: string;
+  site_description_color: string;
   primary_color: string;
   border_radius: number;
   locale: string;
@@ -13,11 +16,7 @@ export type SiteConfig = {
   };
 };
 
-let cached: SiteConfig | null = null;
-
 export async function fetchSiteConfig(): Promise<SiteConfig> {
-  if (cached) return cached;
   const { data } = await api.get<SiteConfig>("/config");
-  cached = data;
   return data;
 }
