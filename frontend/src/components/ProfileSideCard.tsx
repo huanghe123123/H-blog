@@ -1,4 +1,5 @@
-import { Avatar, Button, Card, Tag, Typography } from "antd";
+import MDEditor from "@uiw/react-md-editor";
+import { Avatar, Button, Card, Tag, Tooltip, Typography } from "antd";
 import { Edit3, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
@@ -28,9 +29,9 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
           {roleLabels[profile.role] || profile.role}
         </Tag>
         {profile.bio && (
-          <Typography.Paragraph type="secondary" style={{ marginTop: 10, textAlign: "center", fontSize: 14, wordBreak: "break-word", overflowWrap: "break-word" }}>
-            {profile.bio}
-          </Typography.Paragraph>
+          <div data-color-mode="light" style={{ marginTop: 10, fontSize: 14, wordBreak: "break-word", overflowWrap: "break-word" }}>
+            <MDEditor.Markdown source={profile.bio} />
+          </div>
         )}
         {isOwn && onEdit && (
           <Button type="text" size="small" icon={<Edit3 size={14} />} onClick={onEdit} style={{ marginTop: 8 }}>
@@ -55,6 +56,18 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
             <span className="side-stat-label">性别</span>
           </div>
         </div>
+        {profile.links && profile.links.length > 0 && (
+          <div className="side-links">
+            {profile.links.map((link, i) => (
+              <Tooltip key={i} title={link.label}>
+                <a className="side-link-icon" href={link.url} target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}>
+                  <i className={link.icon} />
+                </a>
+              </Tooltip>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );

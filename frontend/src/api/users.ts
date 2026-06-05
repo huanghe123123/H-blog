@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { User, UserProfile } from "../types";
+import type { User, UserLink, UserProfile } from "../types";
 
 export async function getMe() {
   const { data } = await api.get<User>("/users/me");
@@ -16,7 +16,7 @@ export async function getSiteOwner() {
   return data;
 }
 
-export async function updateMe(payload: Partial<Pick<User, "nickname" | "avatar_url" | "bio" | "birthday" | "gender">>) {
+export async function updateMe(payload: Partial<Pick<User, "nickname" | "avatar_url" | "bio" | "birthday" | "gender">> & { links?: UserLink[] | null }) {
   const { data } = await api.put<User>("/users/me", payload);
   return data;
 }

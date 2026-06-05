@@ -18,12 +18,19 @@ class UserLogin(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
+class UserLink(BaseModel):
+    url: str = Field(max_length=500)
+    label: str = Field(max_length=50)
+    icon: str = Field(max_length=50)
+
+
 class UserUpdate(BaseModel):
     nickname: str | None = Field(default=None, max_length=80)
     avatar_url: str | None = Field(default=None, max_length=500)
     bio: str | None = Field(default=None, max_length=2000)
     birthday: date | None = None
     gender: Literal["male", "female", "other"] | None = None
+    links: list[UserLink] | None = None
 
 
 class UserPublic(ORMModel):
@@ -39,6 +46,7 @@ class UserPublic(ORMModel):
     is_active: bool
     is_verified: bool
     verification_url: str | None = None
+    links: list[UserLink] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -89,4 +97,5 @@ class UserProfile(ORMModel):
     birthday: date | None
     gender: str | None
     role: str
+    links: list[UserLink] | None = None
     created_at: datetime

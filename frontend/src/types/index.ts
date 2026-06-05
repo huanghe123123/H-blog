@@ -1,3 +1,9 @@
+export type UserLink = {
+  url: string;
+  label: string;
+  icon: string;
+};
+
 export type User = {
   id: number;
   username: string;
@@ -11,13 +17,14 @@ export type User = {
   is_active: boolean;
   is_verified: boolean;
   verification_url?: string | null;
+  links?: UserLink[] | null;
   created_at: string;
   updated_at: string;
 };
 
 export type UserBrief = Pick<User, "id" | "username" | "nickname" | "avatar_url">;
 
-export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_url" | "bio" | "birthday" | "gender" | "role" | "created_at">;
+export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_url" | "bio" | "birthday" | "gender" | "role" | "created_at"> & { links?: UserLink[] | null };
 
 export type PostStatus = "draft" | "published";
 

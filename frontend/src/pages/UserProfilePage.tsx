@@ -8,9 +8,10 @@ import { listPosts } from "../api/posts";
 import { getUserProfile, updateMe } from "../api/users";
 import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
+import { LinkEditorModal } from "../components/LinkEditorModal";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
-import type { Comment, Post, UserProfile } from "../types";
+import type { Comment, Post, UserLink, UserProfile } from "../types";
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
@@ -60,6 +61,9 @@ export function UserProfilePage() {
     username: string;
     replyPreview: string | null;
   } | null>(null);
+  const [editLinks, setEditLinks] = useState<UserLink[]>([]);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [editingLinkIdx, setEditingLinkIdx] = useState<number | null>(null);
   const userId = Number(id);
   const isOwn = me?.id === userId;
 
@@ -74,6 +78,7 @@ export function UserProfilePage() {
         birthday: me.birthday,
         gender: me.gender,
         role: me.role,
+        links: me.links,
         created_at: me.created_at,
       });
       form.setFieldsValue({
@@ -143,6 +148,7 @@ export function UserProfilePage() {
     if (values.birthday) {
       payload.birthday = values.birthday.format("YYYY-MM-DD");
     }
+    payload.links = editLinks.length > 0 ? editLinks : null;
     await updateMe(payload as Record<string, string>);
     await refresh();
     setEditing(false);
@@ -157,6 +163,11 @@ export function UserProfilePage() {
 
   const age = calcAge(profile.birthday);
   const publishedCount = posts.filter(p => p.status !== "draft").length;
+
+  const startEdit = () => {
+    setEditLinks(profile.links ? [...profile.links] : []);
+    setEditing(true);
+  };
 
   if (editing) {
     return (
@@ -181,11 +192,41 @@ export function UserProfilePage() {
               <Select.Option value="other">其他</Select.Option>
             </Select>
           </Form.Item>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 8, fontWeight: 500 }}>个人链接</div>
+            {editLinks.map((link, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, padding: "6px 10px", background: "var(--bg)", borderRadius: 6 }}>
+                <i className={link.icon} style={{ fontSize: 18, width: 24, textAlign: "center" }} />
+                <span style={{ flex: 1, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{link.label}</span>
+                <Button type="text" size="small" icon={<Edit3 size={14} />}
+                  onClick={() => { setEditingLinkIdx(i); setLinkModalOpen(true); }} />
+                <Button type="text" danger size="small" icon={<Trash2 size={14} />}
+                  onClick={() => setEditLinks((prev) => prev.filter((_, j) => j !== i))} />
+              </div>
+            ))}
+            <Button type="dashed" onClick={() => { setEditingLinkIdx(null); setLinkModalOpen(true); }} style={{ marginTop: 4 }}>
+              添加个人链接
+            </Button>
+          </div>
           <Space>
             <Button type="primary" htmlType="submit">保存资料</Button>
             <Button onClick={() => setEditing(false)}>取消</Button>
           </Space>
         </Form>
+        <LinkEditorModal
+          open={linkModalOpen}
+          initial={editingLinkIdx !== null ? editLinks[editingLinkIdx] : null}
+          onSave={(link) => {
+            if (editingLinkIdx !== null) {
+              setEditLinks((prev) => prev.map((l, i) => (i === editingLinkIdx ? link : l)));
+            } else {
+              setEditLinks((prev) => [...prev, link]);
+            }
+            setLinkModalOpen(false);
+            setEditingLinkIdx(null);
+          }}
+          onCancel={() => { setLinkModalOpen(false); setEditingLinkIdx(null); }}
+        />
       </section>
     );
   }
@@ -198,7 +239,7 @@ export function UserProfilePage() {
         yearsCount={years.length}
         age={age}
         isOwn={isOwn}
-        onEdit={() => setEditing(true)}
+        onEdit={startEdit}
       />
 
       <div className="profile-center">
