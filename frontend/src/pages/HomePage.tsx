@@ -1,11 +1,11 @@
-import { Card, Empty, Tag, Typography } from "antd";
+import { Card, Empty, Typography } from "antd";
 import MDEditor from "@uiw/react-md-editor";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
 import { listPosts } from "../api/posts";
 import { getSiteOwner } from "../api/users";
+import { PostCard } from "../components/PostCard";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import type { Post, UserProfile } from "../types";
 
@@ -21,7 +21,6 @@ function calcAge(birthday: string | null | undefined): number | null {
 }
 
 export function HomePage() {
-  const navigate = useNavigate();
   const [owner, setOwner] = useState<UserProfile | null>(null);
   const [siteName, setSiteName] = useState("");
   const [siteDesc, setSiteDesc] = useState("");
@@ -58,10 +57,6 @@ export function HomePage() {
   const recentPosts = useMemo(() => ownerPosts.filter(p => p.status !== "draft").slice(0, 5), [ownerPosts]);
   const age = useMemo(() => calcAge(owner?.birthday), [owner]);
 
-  const searchByTag = (tag: string) => {
-    navigate(`/posts/search?keyword=${encodeURIComponent(tag)}`);
-  };
-
   return (
     <div className="profile-layout">
       {owner && (
@@ -88,67 +83,22 @@ export function HomePage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {hotPosts.map((post) => (
-              <Card
-                key={post.id}
-                hoverable
-                onClick={() => navigate(`/posts/${post.id}`)}
-                className="post-card post-card-cover-top"
-              >
-                <div className="post-card-inner-vertical">
-                  {post.cover_url && (
-                    <div className="post-card-cover-top-img">
-                      <img src={post.cover_url} alt={post.title} />
-                    </div>
-                  )}
-                  <div className="post-card-body-top">
-                    <Typography.Title level={4} className="post-card-title" ellipsis={{ rows: 1 }}>
-                      {post.title}
-                    </Typography.Title>
-                    {post.summary && (
-                      <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="post-card-summary">
-                        {post.summary}
-                      </Typography.Paragraph>
-                    )}
-                    {post.tags && post.tags.length > 0 && (
-                      <div style={{ marginTop: 8 }}>
-                        {post.tags.map((tag) => (
-                          <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
-                            onClick={(e) => { e.stopPropagation(); searchByTag(tag); }}>
-                            {tag}
-                          </Tag>
-                        ))}
-                      </div>
-                    )}
-                    <div className="post-card-footer" style={{ marginTop: 10 }}>
-                      <Typography.Text type="secondary" className="post-card-meta">
-                        <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
-                      </Typography.Text>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              <PostCard key={post.id} post={post} coverOnTop />
             ))}
           </div>
         )}
       </div>
       {owner && (
         <div className="profile-right-col">
-          <Card title="最近文章" className="side-card">
+          <Card title="站主的最近文章" className="side-card" style={{ borderRadius: 0 }}>
             {recentPosts.length === 0 ? (
               <Empty description="暂无" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
-              recentPosts.map((post) => (
-                <div key={post.id} className="side-recent-item">
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    {dayjs(post.created_at).format("YYYY-MM-DD")}
-                  </Typography.Text>
-                  <div>
-                    <Link to={`/posts/${post.id}`} className="side-recent-link">
-                      {post.title}
-                    </Link>
-                  </div>
-                </div>
-              ))
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {recentPosts.map((post) => (
+                  <PostCard key={post.id} post={post} showCover={false} shadow={false} />
+                ))}
+              </div>
             )}
           </Card>
         </div>

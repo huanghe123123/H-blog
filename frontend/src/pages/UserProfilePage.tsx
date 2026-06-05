@@ -1,4 +1,4 @@
-import { Badge, Button, Card, DatePicker, Empty, Form, Input, Popconfirm, Select, Space, Tag, Typography, message } from "antd";
+import { Badge, Button, Card, DatePicker, Empty, Form, Input, Popconfirm, Select, Space, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +9,7 @@ import { getUserProfile, updateMe } from "../api/users";
 import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
 import { LinkEditorModal } from "../components/LinkEditorModal";
+import { PostCard } from "../components/PostCard";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
 import type { Comment, Post, UserLink, UserProfile } from "../types";
@@ -251,29 +252,7 @@ export function UserProfilePage() {
               <Typography.Title level={2} className="year-heading">{year}</Typography.Title>
               <div className="year-posts">
                 {yearGroups.get(year)!.map((post) => (
-                  <Card
-                    key={post.id}
-                    hoverable
-                    className="archive-post-card"
-                    onClick={() => navigate(`/posts/${post.id}`)}
-                  >
-                    <div className="archive-post-inner">
-                      <div className="archive-post-text">
-                        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                          {dayjs(post.created_at).format("YYYY-MM-DD")}
-                        </Typography.Text>
-                        <Typography.Title level={5} style={{ margin: "4px 0 0" }}>
-                          {post.status === "draft" && <Tag color="orange" style={{ marginRight: 6 }}>草稿</Tag>}
-                          {post.title}
-                        </Typography.Title>
-                      </div>
-                      {post.cover_url && (
-                        <div className="archive-post-cover">
-                          <img src={post.cover_url} alt={post.title} />
-                        </div>
-                      )}
-                    </div>
-                  </Card>
+                  <PostCard key={post.id} post={post} />
                 ))}
               </div>
             </div>
@@ -282,26 +261,19 @@ export function UserProfilePage() {
       </div>
 
       <div className="profile-right-col">
-        <Card title="最近文章" className="side-card">
+        <Card title="最近文章" className="side-card" style={{ borderRadius: 0 }}>
           {recentPosts.length === 0 ? (
             <Empty description="暂无" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
-            recentPosts.map((post) => (
-              <div key={post.id} className="side-recent-item">
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  {dayjs(post.created_at).format("YYYY-MM-DD")}
-                </Typography.Text>
-                <div>
-                  <Link to={`/posts/${post.id}`} className="side-recent-link">
-                    {post.title}
-                  </Link>
-                </div>
-              </div>
-            ))
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {recentPosts.map((post) => (
+                <PostCard key={post.id} post={post} showCover={false} shadow={false} />
+              ))}
+            </div>
           )}
         </Card>
 
-        <Card title="归档" className="side-card">
+        <Card title="归档" className="side-card" style={{ borderRadius: 0 }}>
           {years.length === 0 ? (
             <Empty description="暂无" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
@@ -321,7 +293,7 @@ export function UserProfilePage() {
           )}
         </Card>
 
-        <Card title="留言" className="side-card">
+        <Card title="留言" className="side-card" style={{ borderRadius: 0 }}>
           {me ? (
             <div style={{ marginBottom: 12 }}>
               {pReplyTo ? (

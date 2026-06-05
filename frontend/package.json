@@ -1,6 +1,6 @@
 {
   "name": "modern-blog-frontend",
-  "version": "0.10.1-dev",
+  "version": "0.10.2-dev",
   "private": true,
   "type": "module",
   "scripts": {

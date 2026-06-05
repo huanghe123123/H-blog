@@ -1,10 +1,10 @@
-import { Button, Card, Checkbox, DatePicker, Empty, Input, Popconfirm, Select, Space, Tag, Typography, message } from "antd";
+import { Button, Checkbox, DatePicker, Empty, Input, Select, Space } from "antd";
 import dayjs from "dayjs";
-import { Edit3, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { deletePost, listPosts, type SortBy } from "../api/posts";
-import { LikeButton } from "../components/LikeButton";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { listPosts, type SortBy } from "../api/posts";
+import { PostCard } from "../components/PostCard";
 import { useAuth } from "../hooks/useAuth";
 import type { Post } from "../types";
 
@@ -38,10 +38,6 @@ export function PostListPage({ showCreateButton = true, syncUrl = true }: { show
     }));
   };
 
-  const searchByTag = (tag: string) => {
-    navigate(`/posts/search?keyword=${encodeURIComponent(tag)}`);
-  };
-
   useEffect(() => {
     const initial = searchParams.get("keyword");
     if (initial) {
@@ -51,12 +47,6 @@ export function PostListPage({ showCreateButton = true, syncUrl = true }: { show
       void load();
     }
   }, []);
-
-  const onDeletePost = async (id: number) => {
-    await deletePost(id);
-    message.success("文章已删除");
-    await load();
-  };
 
   return (
     <section>
@@ -76,56 +66,7 @@ export function PostListPage({ showCreateButton = true, syncUrl = true }: { show
       ) : (
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           {posts.map((post) => (
-            <Card
-              key={post.id}
-              hoverable
-              onClick={() => navigate(`/posts/${post.id}`)}
-              className="post-card"
-            >
-              <div className="post-card-inner">
-                {post.cover_url && (
-                  <div className="post-card-cover">
-                    <img src={post.cover_url} alt={post.title} />
-                  </div>
-                )}
-                <div className="post-card-body">
-                  <Typography.Title level={4} className="post-card-title" ellipsis={{ rows: 1 }}>
-                    {post.title}
-                  </Typography.Title>
-                  {post.summary && (
-                    <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} className="post-card-summary">
-                      {post.summary}
-                    </Typography.Paragraph>
-                  )}
-                  {post.tags && post.tags.length > 0 && (
-                    <Space size={4} wrap style={{ marginBottom: 8 }}>
-                      {post.tags.map((tag) => (
-                        <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
-                          onClick={(e) => { e.stopPropagation(); searchByTag(tag); }}>
-                          {tag}
-                        </Tag>
-                      ))}
-                    </Space>
-                  )}
-                  <div className="post-card-footer">
-                    <Typography.Text type="secondary" className="post-card-meta">
-                      <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
-                    </Typography.Text>
-                    <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
-                      <LikeButton targetType="post" targetId={post.id} />
-                      {(user?.role === "admin" || user?.role === "owner") && (
-                        <>
-                          <Button size="small" icon={<Edit3 size={14} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
-                          <Popconfirm title="确认删除文章？" onConfirm={() => onDeletePost(post.id)}>
-                            <Button size="small" danger icon={<Trash2 size={14} />} />
-                          </Popconfirm>
-                        </>
-                      )}
-                    </Space>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <PostCard key={post.id} post={post} showActions onDeleted={load} />
           ))}
         </Space>
       )}

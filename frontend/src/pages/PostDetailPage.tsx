@@ -1,5 +1,5 @@
 import MDEditor from "@uiw/react-md-editor";
-import { Button, Card, Divider, Popconfirm, Space, Tag, Typography, message } from "antd";
+import { Button, Card, Divider, Empty, Popconfirm, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -8,6 +8,7 @@ import { createComment, deleteComment, listComments } from "../api/comments";
 import { deletePost, getPost, listPosts } from "../api/posts";
 import { getUserProfile } from "../api/users";
 import { CommentEditor } from "../components/CommentEditor";
+import { PostCard } from "../components/PostCard";
 import { LikeButton } from "../components/LikeButton";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
@@ -306,20 +307,15 @@ export function PostDetailPage() {
     </article>
       {authorProfile && (
         <div className="post-detail-right">
-          <Card title="最近文章" className="side-card">
+          <Card title="最近文章" className="side-card" style={{ borderRadius: 0 }}>
             {recentAuthorPosts.length === 0 ? (
-              <Typography.Text type="secondary" style={{ fontSize: 13 }}>暂无</Typography.Text>
+              <Empty description="暂无" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
-              recentAuthorPosts.map(p => (
-                <div key={p.id} style={{ marginBottom: 8 }}>
-                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                    {dayjs(p.created_at).format("YYYY-MM-DD")}
-                  </Typography.Text>
-                  <div>
-                    <Link to={`/posts/${p.id}`} style={{ fontSize: 14 }}>{p.title}</Link>
-                  </div>
-                </div>
-              ))
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {recentAuthorPosts.map(p => (
+                  <PostCard key={p.id} post={p} showCover={false} shadow={false} />
+                ))}
+              </div>
             )}
           </Card>
         </div>

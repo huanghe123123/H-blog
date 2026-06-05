@@ -19,7 +19,7 @@ interface ProfileSideCardProps {
 export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOwn, onEdit }: ProfileSideCardProps) {
   const navigate = useNavigate();
   return (
-    <Card className="side-card profile-left-card">
+    <Card className="side-card profile-left-card" style={{ borderRadius: 0 }} title={profile.role === "owner" ? "站主" : undefined}>
       <div className="side-profile">
         <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} style={{ cursor: "pointer" }} onClick={() => navigate(`/users/${profile.id}`)} />
         <Typography.Title level={4} style={{ margin: "12px 0 4px" }}>
