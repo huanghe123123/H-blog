@@ -26,7 +26,11 @@ If you did not create an account, please ignore this email.
     msg["To"] = email
 
     try:
-        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+        if settings.smtp_port == 465:
+            server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port)
+        else:
+            server = smtplib.SMTP(settings.smtp_host, settings.smtp_port)
+        with server:
             if settings.smtp_user:
                 server.login(settings.smtp_user, settings.smtp_password)
             server.sendmail(settings.smtp_from_email, [email], msg.as_string())

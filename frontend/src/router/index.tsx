@@ -12,6 +12,7 @@ import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
 import { SearchPage } from "../pages/SearchPage";
 import { UserProfilePage } from "../pages/UserProfilePage";
+import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { useAuth } from "../hooks/useAuth";
 
 function ProfileRedirect() {
@@ -22,6 +23,7 @@ function ProfileRedirect() {
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/verify-email", element: <VerifyEmailPage /> },
   {
     element: <AppLayout />,
     children: [
