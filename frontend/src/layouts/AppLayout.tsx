@@ -1,12 +1,12 @@
 import { Avatar, Button, Layout, Modal, Space, Typography } from "antd";
-import { Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
 import { useAuth } from "../hooks/useAuth";
 import { PostListPage } from "../pages/PostListPage";
 
-const { Header, Content } = Layout;
+const { Header, Content, Footer } = Layout;
 
 export function AppLayout() {
   const { user, loading, logout } = useAuth();
@@ -14,6 +14,8 @@ export function AppLayout() {
   const location = useLocation();
   const [siteName, setSiteName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, startY: 0, posX: 0, posY: 0, moved: false });
 
   useEffect(() => {
     fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
@@ -36,15 +38,61 @@ export function AppLayout() {
     return location.pathname.startsWith(path);
   };
 
+  const onFabPointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    const el = fabRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      posX: rect.left,
+      posY: rect.top,
+      moved: false,
+    };
+
+    const onMove = (ev: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d.active) return;
+      const dx = ev.clientX - d.startX;
+      const dy = ev.clientY - d.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        d.moved = true;
+      }
+      if (d.moved && fabRef.current) {
+        fabRef.current.style.left = `${d.posX + dx}px`;
+        fabRef.current.style.top = `${d.posY + dy}px`;
+        fabRef.current.style.right = "auto";
+        fabRef.current.style.bottom = "auto";
+      }
+    };
+
+    const onUp = () => {
+      const d = dragRef.current;
+      d.active = false;
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      if (!d.moved) {
+        navigate("/posts/new");
+      }
+    };
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  }, [navigate]);
+
   const navLinks = user
     ? [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
+        { path: "/about", icon: <Info size={18} />, label: "关于" },
         ...(user.role === "admin" || user.role === "owner" ? [{ path: "/admin/users", icon: <Shield size={18} />, label: "用户管理" }] : [])
       ]
     : [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
+        { path: "/about", icon: <Info size={18} />, label: "关于" },
       ];
 
   return (
@@ -77,15 +125,25 @@ export function AppLayout() {
       <Content className="app-content">
         <Outlet />
       </Content>
+      <Footer className="app-footer">
+        <span className="footer-left">
+          <span>{siteName}</span>
+          <span className="footer-author">© {new Date().getFullYear()} <a href="https://github.com/huanghe123123">huanghe123123</a></span>
+        </span>
+        <span className="footer-powered">
+          <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank" rel="noopener noreferrer">CC BY-NC-SA 4.0</a> | Powered by <a href="https://ant.design" target="_blank" rel="noopener noreferrer">Ant Design</a> & <a href="https://fastapi.tiangolo.com" target="_blank" rel="noopener noreferrer">FastAPI</a>
+        </span>
+      </Footer>
       <Modal open={searchOpen} onCancel={() => setSearchOpen(false)} footer={null} width="90vw" style={{ top: 24 }}>
         <PostListPage showCreateButton={false} syncUrl={false} />
       </Modal>
       {user && (
         <Button
+          ref={fabRef}
           className="fab"
           shape="circle"
           icon={<Pencil size={24} />}
-          onClick={() => navigate("/posts/new")}
+          onPointerDown={onFabPointerDown}
           style={{ width: 56, height: 56 }}
         />
       )}

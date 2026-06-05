@@ -21,8 +21,8 @@ site:
   description: "A modern blog built with FastAPI and React"
   # 简介文字颜色（CSS 颜色值）
   description_color: "#6c757e"
-  # 站长的用户名，留空则自动使用第一个注册用户
-  owner: ""
+  # 站长的用户 ID，设为 0 则自动使用第一个注册用户
+  owner: 0
 
 # ---------------------------------------------------------------------------
 # 服务端口

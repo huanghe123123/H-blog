@@ -14,7 +14,7 @@ from app.utils.security import decode_token
 def _apply_owner_role(user: User) -> User:
     """If the user matches the configured site owner, promote role to owner in memory."""
     settings = get_settings()
-    if settings.site_owner and (user.username == settings.site_owner or str(user.id) == settings.site_owner):
+    if settings.site_owner and user.id == settings.site_owner:
         user.role = UserRole.OWNER
     return user
 

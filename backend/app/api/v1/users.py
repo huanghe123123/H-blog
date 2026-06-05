@@ -29,7 +29,7 @@ def get_site_owner(db: Session = Depends(get_db)):
     settings = get_settings()
     owner = None
     if settings.site_owner:
-        owner = db.scalar(select(User).where(User.username == settings.site_owner))
+        owner = db.scalar(select(User).where(User.id == settings.site_owner))
     if not owner:
         owner = db.scalar(select(User).order_by(User.id.asc()).limit(1))
     if not owner:

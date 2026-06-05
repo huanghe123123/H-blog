@@ -3,7 +3,7 @@ import { api } from "./client";
 export type SiteConfig = {
   site_name: string;
   site_description: string;
-  site_owner: string;
+  site_owner: number;
   site_name_color: string;
   site_description_color: string;
   primary_color: string;
