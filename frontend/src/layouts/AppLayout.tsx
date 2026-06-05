@@ -1,5 +1,5 @@
 import { Avatar, Button, Layout, Modal, Space, Typography } from "antd";
-import { LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
+import { Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
@@ -31,14 +31,21 @@ export function AppLayout() {
     }
   }, [location.pathname, location.search]);
 
-  const isActive = (path: string) => location.pathname === path || (path === "/" && !location.pathname.startsWith("/admin"));
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/" || location.pathname === "/index";
+    return location.pathname.startsWith(path);
+  };
 
   const navLinks = user
     ? [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
+        { path: "/categories", icon: <Layers size={18} />, label: "分类" },
         ...(user.role === "admin" || user.role === "owner" ? [{ path: "/admin/users", icon: <Shield size={18} />, label: "用户管理" }] : [])
       ]
-    : [{ path: "/", icon: <Newspaper size={18} />, label: "文章" }];
+    : [
+        { path: "/", icon: <Newspaper size={18} />, label: "主页" },
+        { path: "/categories", icon: <Layers size={18} />, label: "分类" },
+      ];
 
   return (
     <Layout className="app-shell">

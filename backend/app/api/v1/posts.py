@@ -30,6 +30,7 @@ def list_all(
     sort_by: Literal["created_at", "views", "likes", "comments", "score"] | None = Query(default=None),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
+    category: str | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
 ):
@@ -43,6 +44,7 @@ def list_all(
         sort_by=sort_by,
         date_from=date_from,
         date_to=date_to,
+        category=category,
     )
 
 
@@ -55,6 +57,7 @@ def search(
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
     fuzzy: bool = Query(False),
+    category: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
     return search_posts(
@@ -66,6 +69,7 @@ def search(
         date_from=date_from,
         date_to=date_to,
         fuzzy=fuzzy,
+        category=category,
     )
 
 

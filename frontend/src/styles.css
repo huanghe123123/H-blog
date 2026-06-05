@@ -399,6 +399,11 @@ body {
   line-height: 1.4;
 }
 
+.side-card .post-card .post-card-title.ant-typography {
+  font-size: 14px !important;
+  margin-bottom: 2px !important;
+}
+
 .side-card .post-card .ant-card-body {
   padding: 12px;
 }

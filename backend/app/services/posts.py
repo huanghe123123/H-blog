@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.comment import Comment
 from app.models.like import Like
-from app.models.post import Post, PostStatus
+from app.models.post import Post, PostCategory, PostStatus
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
 
@@ -60,8 +60,24 @@ def _apply_sort(query, sort_by: str | None, like_count_sq, root_comment_count_sq
         return query.order_by(Post.created_at.desc())
 
 
+def _strip_html(text: str) -> str:
+    return re.sub(r"<[^>]*>", "", text).strip()
+
+
+def _auto_summary(content: str, provided: str | None) -> str | None:
+    if provided:
+        return provided
+    plain = _strip_html(content)
+    if not plain:
+        return None
+    return plain[:15]
+
+
 def create_post(db: Session, author: User, payload: PostCreate) -> Post:
+    if payload.category == PostCategory.announcement and author.role not in ("moderator", "admin", "owner"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有版主及以上权限才能发布公告")
     post = Post(author_id=author.id, **payload.model_dump())
+    post.summary = _auto_summary(post.content, post.summary)
     if post.status == PostStatus.published.value:
         post.published_at = datetime.now(timezone.utc)
     db.add(post)
@@ -79,6 +95,7 @@ def list_posts(
     sort_by: str | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
+    category: str | None = None,
 ) -> list[Post]:
     like_count_sq = _like_count_subquery()
     root_comment_count_sq = _root_comment_count_subquery()
@@ -101,6 +118,8 @@ def list_posts(
         query = query.where(Post.created_at >= date_from)
     if date_to is not None:
         query = query.where(Post.created_at <= date_to)
+    if category is not None:
+        query = query.where(Post.category == category)
     query = _apply_sort(query, sort_by, like_count_sq, root_comment_count_sq, reply_count_sq)
     rows = db.execute(query).unique().all()
     posts = []
@@ -121,6 +140,7 @@ def search_posts(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     fuzzy: bool = False,
+    category: str | None = None,
 ) -> list[Post]:
     words = keyword.split()
     like_count_sq = _like_count_subquery()
@@ -143,6 +163,7 @@ def search_posts(
                 Post.summary.ilike(pattern),
                 Post.content.ilike(pattern),
                 func.array_to_string(Post.tags, ",").ilike(pattern),
+                Post.category.ilike(pattern),
                 User.nickname.ilike(pattern),
                 User.username.ilike(pattern),
             ))
@@ -156,6 +177,7 @@ def search_posts(
                 Post.summary.regexp_match(pattern, flags="i"),
                 Post.content.regexp_match(pattern, flags="i"),
                 func.array_to_string(Post.tags, ",").regexp_match(pattern, flags="i"),
+                Post.category.regexp_match(pattern, flags="i"),
                 User.nickname.regexp_match(pattern, flags="i"),
                 User.username.regexp_match(pattern, flags="i"),
             ))
@@ -163,6 +185,8 @@ def search_posts(
         query = query.where(Post.created_at >= date_from)
     if date_to is not None:
         query = query.where(Post.created_at <= date_to)
+    if category is not None:
+        query = query.where(Post.category == category)
     query = _apply_sort(query, sort_by, like_count_sq, root_comment_count_sq, reply_count_sq)
     rows = db.execute(query).unique().all()
     posts = []
@@ -193,9 +217,13 @@ def get_post_detail(db: Session, post_id: int) -> Post:
 def update_post(db: Session, post: Post, user: User, payload: PostUpdate) -> Post:
     if post.author_id != user.id and user.role not in ("admin", "owner"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以编辑此文章")
+    if payload.category is not None and payload.category == PostCategory.announcement and user.role not in ("moderator", "admin", "owner"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有版主及以上权限才能将文章设为公告")
     old_status = post.status
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(post, field, value)
+    if not payload.summary and (payload.content is not None):
+        post.summary = _auto_summary(post.content, None)
     if old_status != PostStatus.published.value and post.status == PostStatus.published.value:
         post.published_at = datetime.now(timezone.utc)
     db.add(post)

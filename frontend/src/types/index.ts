@@ -28,6 +28,8 @@ export type UserProfile = Pick<User, "id" | "username" | "nickname" | "avatar_ur
 
 export type PostStatus = "draft" | "published";
 
+export type PostCategory = "技术" | "创作" | "生活" | "交流" | "公告";
+
 export type Post = {
   id: number;
   title: string;
@@ -35,6 +37,7 @@ export type Post = {
   content: string;
   cover_url?: string | null;
   tags?: string[] | null;
+  category: PostCategory;
   status: PostStatus;
   view_count: number;
   like_count?: number;

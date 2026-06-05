@@ -4,13 +4,15 @@ import dayjs from "dayjs";
 import { ArrowLeft, FileText } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createPost, getPost, listPosts, updatePost } from "../api/posts";
+import { createPost, getPost, listPosts, TAG_PRESETS, updatePost } from "../api/posts";
 import type { PostPayload } from "../api/posts";
-import type { Post, PostStatus } from "../types";
+import { useAuth } from "../hooks/useAuth";
+import type { Post, PostCategory, PostStatus } from "../types";
 
 export function PostEditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form] = Form.useForm<Omit<PostPayload, "status">>();
   const [content, setContent] = useState("");
   const [drafts, setDrafts] = useState<Post[]>([]);
@@ -37,6 +39,7 @@ export function PostEditorPage() {
         content: post.content,
         cover_url: post.cover_url || undefined,
         tags: post.tags || undefined,
+        category: post.category,
       });
       setContent(post.content);
       setEditingStatus(post.status);
@@ -71,6 +74,7 @@ export function PostEditorPage() {
       content: draft.content,
       cover_url: draft.cover_url || undefined,
       tags: draft.tags || undefined,
+      category: draft.category,
     });
     setContent(draft.content);
     setEditingStatus("draft");
@@ -93,9 +97,37 @@ export function PostEditorPage() {
           <Form.Item name="cover_url" label="封面 URL">
             <Input maxLength={500} />
           </Form.Item>
+          <Form.Item name="category" label="分类" rules={[{ required: true, message: "请选择分类" }]}>
+            <Select
+              placeholder="选择分类"
+              options={(["技术", "创作", "生活", "交流", "公告"] as PostCategory[]).map((cat) => ({
+                value: cat,
+                label: cat,
+                disabled: cat === "公告" && user?.role !== "moderator" && user?.role !== "admin" && user?.role !== "owner",
+              }))}
+            />
+          </Form.Item>
           <Form.Item name="tags" label="标签">
             <Select mode="tags" placeholder="输入标签后按回车" style={{ width: "100%" }} />
           </Form.Item>
+          <div style={{ marginTop: -16, marginBottom: 16 }}>
+            <Space size={4} wrap>
+              {TAG_PRESETS.map((tag) => (
+                <Tag
+                  key={tag}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    const current: string[] = form.getFieldValue("tags") || [];
+                    if (!current.includes(tag)) {
+                      form.setFieldValue("tags", [...current, tag]);
+                    }
+                  }}
+                >
+                  + {tag}
+                </Tag>
+              ))}
+            </Space>
+          </div>
           <div className="editor-wrap" data-color-mode="light">
             <MDEditor value={content} onChange={(value) => setContent(value || "")} height={420} />
           </div>

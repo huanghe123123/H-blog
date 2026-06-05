@@ -12,6 +12,14 @@ class PostStatus(str, Enum):
     published = "published"
 
 
+class PostCategory(str, Enum):
+    tech = "技术"
+    creative = "创作"
+    life = "生活"
+    social = "交流"
+    announcement = "公告"
+
+
 class Post(Base):
     __tablename__ = "posts"
 
@@ -27,6 +35,7 @@ class Post(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(50)))
+    category: Mapped[str] = mapped_column(String(20), default=PostCategory.creative.value, index=True, nullable=False)
 
     author = relationship("User", back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")

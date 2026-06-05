@@ -12,7 +12,15 @@ import { PostCard } from "../components/PostCard";
 import { LikeButton } from "../components/LikeButton";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
-import type { Comment, Post, UserProfile } from "../types";
+import type { Comment, Post, PostCategory, UserProfile } from "../types";
+
+const CATEGORY_COLORS: Record<PostCategory, string> = {
+  "技术": "geekblue",
+  "创作": "purple",
+  "生活": "green",
+  "交流": "orange",
+  "公告": "red",
+};
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
@@ -22,6 +30,11 @@ function previewText(html: string, maxLen: number = 10): string | null {
   const text = stripHtml(html);
   if (!text) return null;
   return text.length > maxLen ? text.slice(0, maxLen) + "..." : text;
+}
+
+function isAutoSummary(content: string, summary: string | null | undefined): boolean {
+  if (!summary) return false;
+  return stripHtml(content).slice(0, 15) === summary;
 }
 
 function calcAge(birthday: string | null | undefined): number | null {
@@ -142,9 +155,12 @@ export function PostDetailPage() {
       <div className="page-title-row">
         <div>
           <Typography.Title level={1}>{post.title}</Typography.Title>
-          <Typography.Text type="secondary">
-            <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
-          </Typography.Text>
+          <div style={{ marginBottom: 8 }}>
+            <Tag color={CATEGORY_COLORS[post.category] || "default"}>{post.category}</Tag>
+            <Typography.Text type="secondary">
+              <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+            </Typography.Text>
+          </div>
           {post.tags && post.tags.length > 0 && (
             <Space size={4} wrap style={{ marginTop: 8 }}>
               {post.tags.map((tag) => (
@@ -169,7 +185,9 @@ export function PostDetailPage() {
         </Space>
       </div>
       {post.cover_url && <img className="cover" src={post.cover_url} alt={post.title} />}
-      <Typography.Paragraph className="summary">{post.summary}</Typography.Paragraph>
+      {post.summary && !isAutoSummary(post.content, post.summary) && (
+        <Typography.Paragraph className="summary">{post.summary}</Typography.Paragraph>
+      )}
       <div data-color-mode="light" className="markdown-body">
         <MDEditor.Markdown source={post.content} />
       </div>

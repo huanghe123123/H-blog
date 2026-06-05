@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { Post, PostStatus } from "../types";
+import type { Post, PostCategory, PostStatus } from "../types";
 
 export type PostPayload = {
   title: string;
@@ -7,10 +7,13 @@ export type PostPayload = {
   content: string;
   cover_url?: string;
   tags?: string[];
+  category: PostCategory;
   status: PostStatus;
 };
 
 export type SortBy = "created_at" | "views" | "likes" | "comments" | "score";
+
+export const TAG_PRESETS = ["Python", "JavaScript", "React", "FastAPI", "PostgreSQL", "Docker", "Linux", "AI", "开源", "教程", "随笔"];
 
 export async function listPosts(params?: {
   keyword?: string;
@@ -21,6 +24,7 @@ export async function listPosts(params?: {
   date_to?: string;
   fuzzy?: boolean;
   limit?: number;
+  category?: PostCategory;
 }) {
   const endpoint = params?.keyword ? "/posts/search" : "/posts";
   const query: Record<string, string> = {};
@@ -32,6 +36,7 @@ export async function listPosts(params?: {
   if (params?.date_to) query.date_to = params.date_to;
   if (params?.fuzzy) query.fuzzy = "true";
   if (params?.limit) query.limit = String(params.limit);
+  if (params?.category) query.category = params.category;
   const { data } = await api.get<Post[]>(endpoint, { params: query });
   return data;
 }
