@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { createProfileComment, deleteProfileComment, listProfileComments } from "../api/comments";
 import { listPosts } from "../api/posts";
 import { getUserProfile, updateMe } from "../api/users";
+import { BioEditor } from "../components/BioEditor";
 import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
 import { LinkEditorModal } from "../components/LinkEditorModal";
@@ -13,6 +14,8 @@ import { PostCard } from "../components/PostCard";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
 import type { Comment, Post, UserLink, UserProfile } from "../types";
+import { sanitizeHtml } from "../utils";
+import { resolveAcfunEmojiHtml } from "../utils/acfun";
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
@@ -62,6 +65,7 @@ export function UserProfilePage() {
     username: string;
     replyPreview: string | null;
   } | null>(null);
+  const [bioContent, setBioContent] = useState("");
   const [editLinks, setEditLinks] = useState<UserLink[]>([]);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [editingLinkIdx, setEditingLinkIdx] = useState<number | null>(null);
@@ -144,8 +148,8 @@ export function UserProfilePage() {
     setPCommentContent("");
   };
 
-  const onFinish = async (values: { nickname?: string; avatar_url?: string; bio?: string; birthday?: dayjs.Dayjs; gender?: string }) => {
-    const payload: Record<string, unknown> = { ...values };
+  const onFinish = async (values: { nickname?: string; avatar_url?: string; birthday?: dayjs.Dayjs; gender?: string }) => {
+    const payload: Record<string, unknown> = { ...values, bio: bioContent };
     if (values.birthday) {
       payload.birthday = values.birthday.format("YYYY-MM-DD");
     }
@@ -167,6 +171,7 @@ export function UserProfilePage() {
 
   const startEdit = () => {
     setEditLinks(profile.links ? [...profile.links] : []);
+    setBioContent(profile.bio || "");
     setEditing(true);
   };
 
@@ -180,8 +185,8 @@ export function UserProfilePage() {
           <Form.Item label="头像 URL" name="avatar_url">
             <Input maxLength={500} />
           </Form.Item>
-          <Form.Item label="个人简介" name="bio">
-            <Input.TextArea rows={5} maxLength={2000} />
+          <Form.Item label="个人简介">
+            <BioEditor value={bioContent} onChange={setBioContent} />
           </Form.Item>
           <Form.Item label="生日" name="birthday">
             <DatePicker style={{ width: "100%" }} />
@@ -367,7 +372,7 @@ export function UserProfilePage() {
                       </Space>
                     }
                   >
-                    <div className="comment-content" dangerouslySetInnerHTML={{ __html: c.content }} />
+                    <div className="comment-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveAcfunEmojiHtml(c.content)) }} />
                   </Card>
                   {c.replies.length > 0 && (
                     <div className="comment-replies">
@@ -407,7 +412,7 @@ export function UserProfilePage() {
                               {reply.reply_preview && <>：&ldquo;{reply.reply_preview}&rdquo;</>}
                             </div>
                           )}
-                          <div className="comment-content" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                          <div className="comment-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveAcfunEmojiHtml(reply.content)) }} />
                         </Card>
                       ))}
                     </div>

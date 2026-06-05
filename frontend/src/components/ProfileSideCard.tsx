@@ -1,7 +1,9 @@
 import MDEditor from "@uiw/react-md-editor";
 import { Avatar, Button, Card, Tag, Tooltip, Typography } from "antd";
+import remarkBreaks from "remark-breaks";
 import { Edit3, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { resolveAcfunEmoji } from "../utils/acfun";
 import type { UserProfile } from "../types";
 
 const genderLabels: Record<string, string> = { male: "男", female: "女", other: "其他" };
@@ -30,7 +32,7 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
         </Tag>
         {profile.bio && (
           <div data-color-mode="light" style={{ marginTop: 10, fontSize: 14, wordBreak: "break-word", overflowWrap: "break-word" }}>
-            <MDEditor.Markdown source={profile.bio} />
+            <MDEditor.Markdown source={resolveAcfunEmoji(profile.bio)} remarkPlugins={[remarkBreaks]} />
           </div>
         )}
         {isOwn && onEdit && (

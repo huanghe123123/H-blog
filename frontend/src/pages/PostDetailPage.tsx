@@ -1,5 +1,6 @@
 import MDEditor from "@uiw/react-md-editor";
 import { Button, Card, Divider, Empty, Popconfirm, Space, Tag, Typography, message } from "antd";
+import remarkBreaks from "remark-breaks";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -13,6 +14,8 @@ import { LikeButton } from "../components/LikeButton";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
 import type { Comment, Post, PostCategory, UserProfile } from "../types";
+import { sanitizeHtml } from "../utils";
+import { resolveAcfunEmoji, resolveAcfunEmojiHtml } from "../utils/acfun";
 
 const CATEGORY_COLORS: Record<PostCategory, string> = {
   "技术": "geekblue",
@@ -189,7 +192,7 @@ export function PostDetailPage() {
         <Typography.Paragraph className="summary">{post.summary}</Typography.Paragraph>
       )}
       <div data-color-mode="light" className="markdown-body">
-        <MDEditor.Markdown source={post.content} />
+        <MDEditor.Markdown source={resolveAcfunEmoji(post.content)} remarkPlugins={[remarkBreaks]} />
       </div>
       <Divider />
       <Typography.Title level={3}>
@@ -271,7 +274,7 @@ export function PostDetailPage() {
                 </Space>
               }
             >
-              <div className="comment-content" dangerouslySetInnerHTML={{ __html: comment.content }} />
+              <div className="comment-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveAcfunEmojiHtml(comment.content)) }} />
             </Card>
             {comment.replies.length > 0 && (
               <div className="comment-replies">
@@ -314,7 +317,7 @@ export function PostDetailPage() {
                         {reply.reply_preview && <>：&ldquo;{reply.reply_preview}&rdquo;</>}
                       </div>
                     )}
-                    <div className="comment-content" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                    <div className="comment-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolveAcfunEmojiHtml(reply.content)) }} />
                   </Card>
                 ))}
               </div>

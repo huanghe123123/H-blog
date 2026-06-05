@@ -1,4 +1,9 @@
 import dayjs from "dayjs";
+import DOMPurify from "dompurify";
+
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html);
+}
 
 export function calcAge(birthday: string | null | undefined): number | null {
   if (!birthday) return null;

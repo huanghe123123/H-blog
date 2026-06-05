@@ -1,5 +1,6 @@
 import { Card, Empty, Typography } from "antd";
 import MDEditor from "@uiw/react-md-editor";
+import remarkBreaks from "remark-breaks";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSiteConfig } from "../api/config";
@@ -8,6 +9,7 @@ import { getSiteOwner } from "../api/users";
 import { PostCard } from "../components/PostCard";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import type { Post, UserProfile } from "../types";
+import { resolveAcfunEmoji } from "../utils/acfun";
 
 function calcAge(birthday: string | null | undefined): number | null {
   if (!birthday) return null;
@@ -73,7 +75,7 @@ export function HomePage() {
           <Typography.Title level={2} style={{ marginBottom: 8, color: nameColor }}>{siteName}</Typography.Title>
           {siteDesc && (
             <div data-color-mode="light" className="site-desc" style={{ display: "inline-block", textAlign: "left", ["--desc-color" as string]: descColor }}>
-              <MDEditor.Markdown source={siteDesc} />
+              <MDEditor.Markdown source={resolveAcfunEmoji(siteDesc)} remarkPlugins={[remarkBreaks]} />
             </div>
           )}
         </div>

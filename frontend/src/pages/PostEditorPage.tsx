@@ -1,5 +1,5 @@
-import MDEditor from "@uiw/react-md-editor";
 import { Button, Card, Form, Input, List, Select, Space, Tag, Typography, message } from "antd";
+import { BioEditor } from "../components/BioEditor";
 import dayjs from "dayjs";
 import { ArrowLeft, FileText } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -128,8 +128,8 @@ export function PostEditorPage() {
               ))}
             </Space>
           </div>
-          <div className="editor-wrap" data-color-mode="light">
-            <MDEditor value={content} onChange={(value) => setContent(value || "")} height={420} />
+          <div className="editor-wrap">
+            <BioEditor value={content} onChange={setContent} height={420} />
           </div>
           <Space className="submit-btn">
             <Button onClick={() => submit("draft")}>保存草稿</Button>

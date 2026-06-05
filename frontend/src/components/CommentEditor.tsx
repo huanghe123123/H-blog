@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useRef, useState } from "react";
+import { ACFUN_IDS, acfunImageUrl } from "../utils/acfun";
 
 interface CommentEditorProps {
   value?: string;
@@ -21,6 +22,8 @@ export function CommentEditor({ value, onChange, placeholder, autoFocus }: Comme
   onChangeRef.current = onChange;
   const [, forceUpdate] = useState(0);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [acfunOpen, setAcfunOpen] = useState(false);
+  const [pickerStyle, setPickerStyle] = useState<React.CSSProperties>({});
 
   const extensions = [
     StarterKit.configure({
@@ -73,6 +76,18 @@ export function CommentEditor({ value, onChange, placeholder, autoFocus }: Comme
     setEmojiOpen(false);
   };
 
+  const insertAcfun = (id: string) => {
+    editor.chain().focus().insertContent(`[ac${id}]`).run();
+    setAcfunOpen(false);
+  };
+
+  const openPicker = (type: "emoji" | "acfun", btnEl: HTMLElement) => {
+    const rect = btnEl.getBoundingClientRect();
+    setPickerStyle({ top: rect.bottom + 4, left: rect.left });
+    if (type === "emoji") { setEmojiOpen(true); setAcfunOpen(false); }
+    else { setAcfunOpen(true); setEmojiOpen(false); }
+  };
+
   return (
     <div className="comment-editor">
       <div className="comment-editor-toolbar">
@@ -102,16 +117,36 @@ export function CommentEditor({ value, onChange, placeholder, autoFocus }: Comme
           title="插入链接">🔗</button>
         <span className="emoji-btn-wrap">
           <button type="button" tabIndex={-1}
-            onClick={() => setEmojiOpen((v) => !v)}
+            onClick={(e) => emojiOpen ? setEmojiOpen(false) : openPicker("emoji", e.currentTarget)}
             title="表情">😊</button>
           {emojiOpen && (
             <>
               <div className="emoji-overlay" onClick={() => setEmojiOpen(false)} />
-              <div className="emoji-picker">
+              <div className="emoji-picker" style={pickerStyle}>
                 {EMOJI_LIST.map((e) => (
                   <button key={e} type="button" tabIndex={-1}
                     onMouseDown={(ev) => { ev.preventDefault(); insertEmoji(e); }}
                     title={e}>{e}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </span>
+        <span className="emoji-btn-wrap">
+          <button type="button" tabIndex={-1}
+            onClick={(e) => acfunOpen ? setAcfunOpen(false) : openPicker("acfun", e.currentTarget)}
+            title="AC娘表情">AC</button>
+          {acfunOpen && (
+            <>
+              <div className="emoji-overlay" onClick={() => setAcfunOpen(false)} />
+              <div className="emoji-picker acfun-picker" style={pickerStyle}>
+                {ACFUN_IDS.map((id) => (
+                  <button key={id} type="button" tabIndex={-1}
+                    className="acfun-emoji-btn"
+                    onMouseDown={(ev) => { ev.preventDefault(); insertAcfun(id); }}
+                    title={`ac${id}`}>
+                    <img src={acfunImageUrl(id)} alt={`ac${id}`} loading="lazy" />
+                  </button>
                 ))}
               </div>
             </>

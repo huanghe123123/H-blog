@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BioEditor } from "../components/BioEditor";
 import { LinkEditorModal } from "../components/LinkEditorModal";
 import { aboutData } from "../data/about";
 import type { UserLink } from "../types";
@@ -10,12 +11,13 @@ import type { UserLink } from "../types";
 export function AboutEditorPage() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const [bioContent, setBioContent] = useState(aboutData.bio || "");
   const [editLinks, setEditLinks] = useState<UserLink[]>(aboutData.links);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [editingLinkIdx, setEditingLinkIdx] = useState<number | null>(null);
 
-  const onFinish = async (values: { nickname?: string; avatar_url?: string; bio?: string; birthday?: dayjs.Dayjs; gender?: string }) => {
-    const payload: Record<string, unknown> = { ...values };
+  const onFinish = async (values: { nickname?: string; avatar_url?: string; birthday?: dayjs.Dayjs; gender?: string }) => {
+    const payload: Record<string, unknown> = { ...values, bio: bioContent };
     if (values.birthday) {
       payload.birthday = values.birthday.format("YYYY-MM-DD");
     }
@@ -40,7 +42,6 @@ export function AboutEditorPage() {
         initialValues={{
           nickname: aboutData.nickname,
           avatar_url: aboutData.avatar_url,
-          bio: aboutData.bio,
           birthday: aboutData.birthday ? dayjs(aboutData.birthday) : undefined,
           gender: aboutData.gender,
         }}
@@ -51,9 +52,9 @@ export function AboutEditorPage() {
         <Form.Item label="头像 URL" name="avatar_url">
           <Input maxLength={500} />
         </Form.Item>
-        <Form.Item label="个人简介" name="bio">
-          <Input.TextArea rows={5} maxLength={2000} />
-        </Form.Item>
+        <Form.Item label="个人简介">
+            <BioEditor value={bioContent} onChange={setBioContent} />
+          </Form.Item>
         <Form.Item label="生日" name="birthday">
           <DatePicker style={{ width: "100%" }} />
         </Form.Item>
