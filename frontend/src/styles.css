@@ -371,10 +371,33 @@ body {
   align-items: start;
 }
 
+.post-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 2.6fr 1.2fr;
+  gap: 24px;
+  width: 80%;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.post-detail-layout > article {
+  min-width: 0;
+}
+
+.post-detail-right {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
 .profile-left-card {
   grid-column: 1;
   position: sticky;
   top: 20px;
+  min-width: 0;
 }
 
 .profile-center {

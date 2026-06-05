@@ -27,7 +27,7 @@ def list_all(
     limit: int = Query(20, ge=1, le=100),
     status_filter: PostStatus | None = Query(default=None, alias="status"),
     author_id: int | None = Query(default=None),
-    sort_by: Literal["created_at", "views", "likes", "score"] | None = Query(default=None),
+    sort_by: Literal["created_at", "views", "likes", "comments", "score"] | None = Query(default=None),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
@@ -51,7 +51,7 @@ def search(
     keyword: str = Query(min_length=1),
     skip: int = 0,
     limit: int = Query(20, ge=1, le=100),
-    sort_by: Literal["created_at", "views", "likes", "score"] | None = Query(default=None),
+    sort_by: Literal["created_at", "views", "likes", "comments", "score"] | None = Query(default=None),
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
     fuzzy: bool = Query(False),
@@ -90,7 +90,7 @@ def delete(post_id: int, db: Session = Depends(get_db), current_user: User = Dep
 @router.post("/{post_id}/comments", response_model=CommentPublic, status_code=status.HTTP_201_CREATED)
 def comment(post_id: int, payload: CommentCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     post = get_post_or_404(db, post_id)
-    return create_comment(db, post, current_user, payload)
+    return create_comment(db, current_user, payload, post=post)
 
 
 @router.get("/{post_id}/comments", response_model=list[CommentPublic])

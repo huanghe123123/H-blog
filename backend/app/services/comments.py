@@ -22,7 +22,13 @@ def _preview(html: str, length: int = 10) -> str | None:
     return text[:length] + ("..." if len(text) > length else "")
 
 
-def create_comment(db: Session, post: Post, user: User, payload: CommentCreate) -> Comment:
+def create_comment(
+    db: Session,
+    user: User,
+    payload: CommentCreate,
+    post: Post | None = None,
+    profile_user: User | None = None,
+) -> Comment:
     content = sanitize_html(payload.content)
     if not content or not _strip_html(content):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="评论内容不能为空")
@@ -31,8 +37,6 @@ def create_comment(db: Session, post: Post, user: User, payload: CommentCreate) 
     reply_preview = payload.reply_preview
     if payload.parent_id is not None:
         parent = get_comment_or_404(db, payload.parent_id)
-        if parent.post_id != post.id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="父评论不属于此文章")
         if reply_to_user_id is None:
             reply_to_user_id = parent.user_id
         if reply_preview is None:
@@ -40,7 +44,8 @@ def create_comment(db: Session, post: Post, user: User, payload: CommentCreate) 
 
     comment = Comment(
         content=content,
-        post_id=post.id,
+        post_id=post.id if post else None,
+        profile_id=profile_user.id if profile_user else None,
         user_id=user.id,
         parent_id=payload.parent_id,
         reply_to_user_id=reply_to_user_id,
@@ -51,16 +56,19 @@ def create_comment(db: Session, post: Post, user: User, payload: CommentCreate) 
     return get_comment_or_404(db, comment.id)
 
 
-def list_comments(db: Session, post_id: int) -> list[Comment]:
+def list_comments(db: Session, post_id: int | None = None, profile_id: int | None = None) -> list[Comment]:
     query = (
         select(Comment)
         .options(
             joinedload(Comment.user),
             joinedload(Comment.reply_to_user),
         )
-        .where(Comment.post_id == post_id)
         .order_by(Comment.created_at.asc())
     )
+    if post_id is not None:
+        query = query.where(Comment.post_id == post_id)
+    elif profile_id is not None:
+        query = query.where(Comment.profile_id == profile_id)
     all_comments = list(db.scalars(query).unique())
     return build_comment_tree(all_comments)
 

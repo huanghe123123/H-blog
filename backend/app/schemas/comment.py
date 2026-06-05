@@ -11,13 +11,14 @@ class CommentCreate(BaseModel):
     parent_id: int | None = None
     reply_to_user_id: int | None = None
     reply_preview: str | None = None
+    profile_id: int | None = None
 
 
 class CommentPublic(ORMModel):
     id: int
     content: str
     user_id: int
-    post_id: int
+    post_id: int | None = None
     parent_id: int | None = None
     reply_to_user_id: int | None = None
     reply_to_user: UserBrief | None = None

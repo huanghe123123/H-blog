@@ -1,15 +1,26 @@
-import { Avatar, Badge, Button, Card, DatePicker, Empty, Form, Input, Select, Space, Tag, Typography, message } from "antd";
+import { Badge, Button, Card, DatePicker, Empty, Form, Input, Popconfirm, Select, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
-import { Edit3, UserRound } from "lucide-react";
+import { Edit3, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { createProfileComment, deleteProfileComment, listProfileComments } from "../api/comments";
 import { listPosts } from "../api/posts";
 import { getUserProfile, updateMe } from "../api/users";
+import { CommentEditor } from "../components/CommentEditor";
+import { LikeButton } from "../components/LikeButton";
+import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
-import type { Post, UserProfile } from "../types";
+import type { Comment, Post, UserProfile } from "../types";
 
-const genderLabels: Record<string, string> = { male: "男", female: "女", other: "其他" };
-const roleLabels: Record<string, string> = { admin: "管理员", moderator: "版主", user: "普通用户" };
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
+
+function previewText(html: string, maxLen: number = 10): string | null {
+  const text = stripHtml(html);
+  if (!text) return null;
+  return text.length > maxLen ? text.slice(0, maxLen) + "..." : text;
+}
 
 function calcAge(birthday: string | null | undefined): number | null {
   if (!birthday) return null;
@@ -40,6 +51,15 @@ export function UserProfilePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [editing, setEditing] = useState(false);
   const [form] = Form.useForm();
+  const [pcomments, setPComments] = useState<Comment[]>([]);
+  const [pcommentContent, setPCommentContent] = useState("");
+  const [pcommentSubmitting, setPCommentSubmitting] = useState(false);
+  const [pReplyTo, setPReplyTo] = useState<{
+    parentId: number;
+    replyToUserId: number;
+    username: string;
+    replyPreview: string | null;
+  } | null>(null);
   const userId = Number(id);
   const isOwn = me?.id === userId;
 
@@ -77,6 +97,46 @@ export function UserProfilePage() {
       listPosts({ author_id: userId }).then(setPosts);
     }
   }, [userId, isOwn]);
+
+  useEffect(() => {
+    listProfileComments(userId).then(setPComments);
+  }, [userId]);
+
+  const refreshPComments = async () => {
+    setPComments(await listProfileComments(userId));
+  };
+
+  const onPComment = async () => {
+    if (!stripHtml(pcommentContent)) {
+      message.warning("请输入留言");
+      return;
+    }
+    setPCommentSubmitting(true);
+    try {
+      await createProfileComment(
+        userId,
+        pcommentContent,
+        pReplyTo?.parentId,
+        pReplyTo?.replyToUserId,
+        pReplyTo?.replyPreview ?? undefined,
+      );
+      setPCommentContent("");
+      setPReplyTo(null);
+      await refreshPComments();
+    } finally {
+      setPCommentSubmitting(false);
+    }
+  };
+
+  const onPReply = (parentId: number, replyToUserId: number, username: string, replyContent: string) => {
+    setPReplyTo({ parentId, replyToUserId, username, replyPreview: previewText(replyContent) });
+    setPCommentContent("");
+  };
+
+  const onPCancelReply = () => {
+    setPReplyTo(null);
+    setPCommentContent("");
+  };
 
   const onFinish = async (values: { nickname?: string; avatar_url?: string; bio?: string; birthday?: dayjs.Dayjs; gender?: string }) => {
     const payload: Record<string, unknown> = { ...values };
@@ -132,45 +192,14 @@ export function UserProfilePage() {
 
   return (
     <div className="profile-layout">
-      <Card className="side-card profile-left-card">
-        <div className="side-profile">
-          <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} />
-          <Typography.Title level={4} style={{ margin: "12px 0 4px" }}>
-            {profile.nickname || profile.username}
-          </Typography.Title>
-          <Tag color={profile.role === "admin" ? "red" : profile.role === "moderator" ? "blue" : "default"}>
-            {roleLabels[profile.role] || profile.role}
-          </Tag>
-          {profile.bio && (
-            <Typography.Paragraph type="secondary" style={{ marginTop: 10, textAlign: "center", fontSize: 14 }}>
-              {profile.bio}
-            </Typography.Paragraph>
-          )}
-          {isOwn && (
-            <Button type="text" size="small" icon={<Edit3 size={14} />} onClick={() => setEditing(true)} style={{ marginTop: 8 }}>
-              编辑资料
-            </Button>
-          )}
-          <div className="side-stats">
-            <div className="side-stat">
-              <span className="side-stat-num">{publishedCount}</span>
-              <span className="side-stat-label">文章</span>
-            </div>
-            <div className="side-stat">
-              <span className="side-stat-num">{years.length}</span>
-              <span className="side-stat-label">年份</span>
-            </div>
-            <div className="side-stat">
-              <span className="side-stat-num">{age ?? "-"}</span>
-              <span className="side-stat-label">岁</span>
-            </div>
-            <div className="side-stat">
-              <span className="side-stat-num">{profile.gender ? (genderLabels[profile.gender] ?? profile.gender) : "-"}</span>
-              <span className="side-stat-label">性别</span>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <ProfileSideCard
+        profile={profile}
+        publishedCount={publishedCount}
+        yearsCount={years.length}
+        age={age}
+        isOwn={isOwn}
+        onEdit={() => setEditing(true)}
+      />
 
       <div className="profile-center">
         {posts.length === 0 ? (
@@ -248,6 +277,131 @@ export function UserProfilePage() {
                 <Badge count={yearGroups.get(year)!.length} overflowCount={999} style={{ backgroundColor: "#d8dee4", color: "#57606a" }} />
               </div>
             ))
+          )}
+        </Card>
+
+        <Card title="留言" className="side-card">
+          {me ? (
+            <div style={{ marginBottom: 12 }}>
+              {pReplyTo ? (
+                <Card
+                  size="small"
+                  className="reply-editor-card"
+                  title={<span>回复 <Link to={`/users/${pReplyTo.replyToUserId}`} style={{ fontWeight: 600 }}>@{pReplyTo.username}</Link></span>}
+                  extra={<Button type="text" size="small" onClick={onPCancelReply}>取消回复</Button>}
+                >
+                  <CommentEditor
+                    key={pReplyTo.replyToUserId}
+                    value={pcommentContent}
+                    onChange={setPCommentContent}
+                    placeholder={`回复 @${pReplyTo.username}...`}
+                    autoFocus
+                  />
+                  <Button type="primary" size="small" onClick={onPComment} loading={pcommentSubmitting} style={{ marginTop: 8 }}>
+                    回复
+                  </Button>
+                </Card>
+              ) : (
+                <>
+                  <CommentEditor
+                    key="profile-comment"
+                    value={pcommentContent}
+                    onChange={setPCommentContent}
+                    placeholder="写下你的留言..."
+                  />
+                  <Button type="primary" size="small" onClick={onPComment} loading={pcommentSubmitting} style={{ marginTop: 8 }}>
+                    留言
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <Typography.Text type="secondary" style={{ fontSize: 13, display: "block", marginBottom: 12 }}>
+              <Link to="/login">登录</Link>后即可留言
+            </Typography.Text>
+          )}
+          {pcomments.length === 0 ? (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>暂无留言</Typography.Text>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {pcomments.map((c) => (
+                <div key={c.id}>
+                  <Card
+                    className="comment-card"
+                    size="small"
+                    title={
+                      <span style={{ fontSize: 13 }}>
+                        <Link to={`/users/${c.user.id}`}>{c.user.nickname || c.user.username}</Link>
+                        <span style={{ color: "#8b949e", marginLeft: 6, fontSize: 12, fontWeight: 400 }}>
+                          {dayjs(c.created_at).format("MM-DD HH:mm")}
+                        </span>
+                      </span>
+                    }
+                    extra={
+                      <Space size={2}>
+                        <LikeButton targetType="comment" targetId={c.id} />
+                        {me && (
+                          <Button type="text" size="small" style={{ fontSize: 12 }}
+                            onClick={() => onPReply(c.id, c.user.id, c.user.nickname || c.user.username, c.content)}>
+                            回复
+                          </Button>
+                        )}
+                        {(me?.id === c.user_id || me?.role === "admin") && (
+                          <Popconfirm title="确认删除？" onConfirm={async () => { await deleteProfileComment(c.id); await refreshPComments(); }}>
+                            <Button type="text" danger size="small" icon={<Trash2 size={12} />} />
+                          </Popconfirm>
+                        )}
+                      </Space>
+                    }
+                  >
+                    <div className="comment-content" dangerouslySetInnerHTML={{ __html: c.content }} />
+                  </Card>
+                  {c.replies.length > 0 && (
+                    <div className="comment-replies">
+                      {c.replies.map((reply) => (
+                        <Card
+                          key={reply.id}
+                          className="comment-card"
+                          size="small"
+                          title={
+                            <span style={{ fontSize: 13 }}>
+                              <Link to={`/users/${reply.user.id}`}>{reply.user.nickname || reply.user.username}</Link>
+                              <span style={{ color: "#8b949e", marginLeft: 6, fontSize: 12, fontWeight: 400 }}>
+                                {dayjs(reply.created_at).format("MM-DD HH:mm")}
+                              </span>
+                            </span>
+                          }
+                          extra={
+                            <Space size={2}>
+                              <LikeButton targetType="comment" targetId={reply.id} />
+                              {me && (
+                                <Button type="text" size="small" style={{ fontSize: 12 }}
+                                  onClick={() => onPReply(c.id, reply.user.id, reply.user.nickname || reply.user.username, reply.content)}>
+                                  回复
+                                </Button>
+                              )}
+                              {(me?.id === reply.user_id || me?.role === "admin") && (
+                                <Popconfirm title="确认删除？" onConfirm={async () => { await deleteProfileComment(reply.id); await refreshPComments(); }}>
+                                  <Button type="text" danger size="small" icon={<Trash2 size={12} />} />
+                                </Popconfirm>
+                              )}
+                            </Space>
+                          }
+                        >
+                          {reply.reply_to_user && (
+                            <div className="reply-to-tag">
+                              回复 <Link to={`/users/${reply.reply_to_user.id}`}>@{reply.reply_to_user.nickname || reply.reply_to_user.username}</Link>
+                              {reply.reply_preview && <>：&ldquo;{reply.reply_preview}&rdquo;</>}
+                            </div>
+                          )}
+                          <div className="comment-content" dangerouslySetInnerHTML={{ __html: reply.content }} />
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </Card>
       </div>

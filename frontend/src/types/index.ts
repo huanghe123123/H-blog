@@ -30,6 +30,9 @@ export type Post = {
   tags?: string[] | null;
   status: PostStatus;
   view_count: number;
+  like_count?: number;
+  comment_count?: number;
+  reply_count?: number;
   author_id: number;
   author: UserBrief;
   created_at: string;
@@ -41,7 +44,7 @@ export type Comment = {
   id: number;
   content: string;
   user_id: number;
-  post_id: number;
+  post_id: number | null;
   parent_id: number | null;
   reply_to_user: UserBrief | null;
   reply_preview: string | null;

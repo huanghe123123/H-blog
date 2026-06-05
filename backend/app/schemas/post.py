@@ -52,6 +52,9 @@ class PostList(ORMModel):
     tags: list[str] | None
     status: str
     view_count: int
+    like_count: int = 0
+    comment_count: int = 0
+    reply_count: int = 0
     author_id: int
     author: UserBrief
     created_at: datetime

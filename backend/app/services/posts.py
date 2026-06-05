@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, or_, select, case, literal, text
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.comment import Comment
 from app.models.like import Like
 from app.models.post import Post, PostStatus
 from app.models.user import User
@@ -20,16 +21,39 @@ def _like_count_subquery():
     )
 
 
-def _apply_sort(query, sort_by: str | None, like_count_sq):
+def _root_comment_count_subquery():
+    return (
+        select(func.count(Comment.id))
+        .where(Comment.post_id == Post.id, Comment.parent_id == None)
+        .correlate(Post)
+        .scalar_subquery()
+    )
+
+
+def _reply_count_subquery():
+    return (
+        select(func.count(Comment.id))
+        .where(Comment.post_id == Post.id, Comment.parent_id != None)
+        .correlate(Post)
+        .scalar_subquery()
+    )
+
+
+def _apply_sort(query, sort_by: str | None, like_count_sq, root_comment_count_sq, reply_count_sq):
     if sort_by == "views":
         return query.order_by(Post.view_count.desc())
     elif sort_by == "likes":
         return query.order_by(like_count_sq.desc())
+    elif sort_by == "comments":
+        total_comments = func.coalesce(root_comment_count_sq, 0) + func.coalesce(reply_count_sq, 0)
+        return query.order_by(total_comments.desc())
     elif sort_by == "score":
         score = (
-            func.extract("epoch", Post.created_at) / 10000.0 * 0.2
-            + func.coalesce(like_count_sq, 0) * 0.5
-            + Post.view_count * 0.3
+            func.extract("epoch", Post.created_at) / 10000.0 * 0.1
+            + func.coalesce(like_count_sq, 0) * 0.35
+            + func.coalesce(root_comment_count_sq, 0) * 0.35
+            + func.coalesce(reply_count_sq, 0) * 0.35
+            + Post.view_count * 0.2
         )
         return query.order_by(score.desc())
     else:
@@ -57,7 +81,14 @@ def list_posts(
     date_to: datetime | None = None,
 ) -> list[Post]:
     like_count_sq = _like_count_subquery()
-    query = select(Post).options(joinedload(Post.author)).offset(skip).limit(limit)
+    root_comment_count_sq = _root_comment_count_subquery()
+    reply_count_sq = _reply_count_subquery()
+    query = (
+        select(Post, like_count_sq.label("like_count"), root_comment_count_sq.label("comment_count"), reply_count_sq.label("reply_count"))
+        .options(joinedload(Post.author))
+        .offset(skip)
+        .limit(limit)
+    )
     if status_filter:
         query = query.where(Post.status == status_filter)
         if status_filter == PostStatus.draft.value and (not user or user.role != "admin"):
@@ -70,8 +101,15 @@ def list_posts(
         query = query.where(Post.created_at >= date_from)
     if date_to is not None:
         query = query.where(Post.created_at <= date_to)
-    query = _apply_sort(query, sort_by, like_count_sq)
-    return list(db.scalars(query).unique())
+    query = _apply_sort(query, sort_by, like_count_sq, root_comment_count_sq, reply_count_sq)
+    rows = db.execute(query).unique().all()
+    posts = []
+    for post, like_count, comment_count, reply_count in rows:
+        post.like_count = like_count
+        post.comment_count = comment_count
+        post.reply_count = reply_count
+        posts.append(post)
+    return posts
 
 
 def search_posts(
@@ -86,8 +124,10 @@ def search_posts(
 ) -> list[Post]:
     words = keyword.split()
     like_count_sq = _like_count_subquery()
+    root_comment_count_sq = _root_comment_count_subquery()
+    reply_count_sq = _reply_count_subquery()
     query = (
-        select(Post)
+        select(Post, like_count_sq.label("like_count"), root_comment_count_sq.label("comment_count"), reply_count_sq.label("reply_count"))
         .join(Post.author)
         .options(joinedload(Post.author))
         .where(Post.status == PostStatus.published.value)
@@ -123,8 +163,15 @@ def search_posts(
         query = query.where(Post.created_at >= date_from)
     if date_to is not None:
         query = query.where(Post.created_at <= date_to)
-    query = _apply_sort(query, sort_by, like_count_sq)
-    return list(db.scalars(query).unique())
+    query = _apply_sort(query, sort_by, like_count_sq, root_comment_count_sq, reply_count_sq)
+    rows = db.execute(query).unique().all()
+    posts = []
+    for post, like_count, comment_count, reply_count in rows:
+        post.like_count = like_count
+        post.comment_count = comment_count
+        post.reply_count = reply_count
+        posts.append(post)
+    return posts
 
 
 def get_post_or_404(db: Session, post_id: int) -> Post:

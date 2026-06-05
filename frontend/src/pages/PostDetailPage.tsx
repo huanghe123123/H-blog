@@ -2,14 +2,16 @@ import MDEditor from "@uiw/react-md-editor";
 import { Button, Card, Divider, Popconfirm, Space, Tag, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { Edit3, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { createComment, deleteComment, listComments } from "../api/comments";
-import { deletePost, getPost } from "../api/posts";
+import { deletePost, getPost, listPosts } from "../api/posts";
+import { getUserProfile } from "../api/users";
 import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
+import { ProfileSideCard } from "../components/ProfileSideCard";
 import { useAuth } from "../hooks/useAuth";
-import type { Comment, Post } from "../types";
+import type { Comment, Post, UserProfile } from "../types";
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
@@ -19,6 +21,17 @@ function previewText(html: string, maxLen: number = 10): string | null {
   const text = stripHtml(html);
   if (!text) return null;
   return text.length > maxLen ? text.slice(0, maxLen) + "..." : text;
+}
+
+function calcAge(birthday: string | null | undefined): number | null {
+  if (!birthday) return null;
+  const b = dayjs(birthday);
+  const now = dayjs();
+  let age = now.year() - b.year();
+  if (now.month() < b.month() || (now.month() === b.month() && now.date() < b.date())) {
+    age--;
+  }
+  return age;
 }
 
 export function PostDetailPage() {
@@ -35,12 +48,17 @@ export function PostDetailPage() {
     username: string;
     replyPreview: string | null;
   } | null>(null);
+  const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+  const [authorPosts, setAuthorPosts] = useState<Post[]>([]);
   const postId = Number(id);
   const loadedId = useRef<number | null>(null);
 
   const load = async () => {
-    setPost(await getPost(postId));
+    const p = await getPost(postId);
+    setPost(p);
     setComments(await listComments(postId));
+    getUserProfile(p.author_id).then(setAuthorProfile).catch(() => setAuthorProfile(null));
+    listPosts({ author_id: p.author_id }).then(setAuthorPosts);
   };
 
   const refreshComments = async () => {
@@ -52,6 +70,20 @@ export function PostDetailPage() {
     loadedId.current = postId;
     void load();
   }, [postId]);
+
+  const publishedCount = useMemo(
+    () => authorPosts.filter(p => p.status !== "draft").length,
+    [authorPosts],
+  );
+  const yearsCount = useMemo(
+    () => new Set(authorPosts.map(p => dayjs(p.created_at).year())).size,
+    [authorPosts],
+  );
+  const authorAge = useMemo(() => calcAge(authorProfile?.birthday), [authorProfile]);
+  const recentAuthorPosts = useMemo(
+    () => authorPosts.filter(p => p.status !== "draft").slice(0, 5),
+    [authorPosts],
+  );
 
   if (!post) return null;
   const isAuthor = user?.id === post.author_id;
@@ -95,7 +127,18 @@ export function PostDetailPage() {
   };
 
   return (
-    <article className="post-detail">
+    <div className="post-detail-layout">
+      {authorProfile && (
+        <ProfileSideCard
+          profile={authorProfile}
+          publishedCount={publishedCount}
+          yearsCount={yearsCount}
+          age={authorAge}
+          isOwn={user?.id === authorProfile.id}
+          onEdit={() => navigate(`/users/${authorProfile.id}`)}
+        />
+      )}
+      <article className="post-detail">
       <div className="page-title-row">
         <div>
           <Typography.Title level={1}>{post.title}</Typography.Title>
@@ -117,7 +160,7 @@ export function PostDetailPage() {
           <LikeButton targetType="post" targetId={post.id} />
           {(isAuthor || user?.role === "admin") && (
             <>
-              <Button icon={<Edit3 size={16} />}><Link to={`/posts/${post.id}/edit`}>编辑</Link></Button>
+              <Button icon={<Edit3 size={16} />} onClick={() => navigate(`/posts/${post.id}/edit`)}>编辑</Button>
               <Popconfirm title="确认删除文章？" onConfirm={onDeletePost}>
                 <Button danger icon={<Trash2 size={16} />} />
               </Popconfirm>
@@ -131,7 +174,17 @@ export function PostDetailPage() {
         <MDEditor.Markdown source={post.content} />
       </div>
       <Divider />
-      <Typography.Title level={3}>评论</Typography.Title>
+      <Typography.Title level={3}>
+        评论
+        {comments.length > 0 && (
+          <Typography.Text type="secondary" style={{ fontSize: 14, fontWeight: 400, marginLeft: 8 }}>
+            {comments.length} 条评论
+            {comments.reduce((sum, c) => sum + c.replies.length, 0) > 0 &&
+              <> · {comments.reduce((sum, c) => sum + c.replies.length, 0)} 条回复</>
+            }
+          </Typography.Text>
+        )}
+      </Typography.Title>
       {user ? (
         <div style={{ marginBottom: 20 }}>
           {replyTo ? (
@@ -252,5 +305,26 @@ export function PostDetailPage() {
         ))}
       </div>
     </article>
+      {authorProfile && (
+        <div className="post-detail-right">
+          <Card title="最近文章" className="side-card">
+            {recentAuthorPosts.length === 0 ? (
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>暂无</Typography.Text>
+            ) : (
+              recentAuthorPosts.map(p => (
+                <div key={p.id} style={{ marginBottom: 8 }}>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {dayjs(p.created_at).format("YYYY-MM-DD")}
+                  </Typography.Text>
+                  <div>
+                    <Link to={`/posts/${p.id}`} style={{ fontSize: 14 }}>{p.title}</Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

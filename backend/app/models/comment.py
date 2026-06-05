@@ -12,7 +12,8 @@ class Comment(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), index=True, nullable=False)
+    post_id: Mapped[int | None] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), index=True, nullable=True, default=None)
+    profile_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True, default=None)
     parent_id: Mapped[int | None] = mapped_column(
         ForeignKey("comments.id", ondelete="CASCADE"), index=True, nullable=True, default=None
     )
@@ -25,6 +26,7 @@ class Comment(Base):
 
     user = relationship("User", foreign_keys=[user_id], back_populates="comments")
     post = relationship("Post", back_populates="comments")
+    profile = relationship("User", foreign_keys=[profile_id], back_populates="profile_comments")
     parent = relationship("Comment", remote_side=[id], back_populates="replies")
     replies = relationship(
         "Comment", back_populates="parent", cascade="all, delete-orphan",

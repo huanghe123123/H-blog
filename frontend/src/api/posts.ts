@@ -10,7 +10,7 @@ export type PostPayload = {
   status: PostStatus;
 };
 
-export type SortBy = "created_at" | "views" | "likes" | "score";
+export type SortBy = "created_at" | "views" | "likes" | "comments" | "score";
 
 export async function listPosts(params?: {
   keyword?: string;

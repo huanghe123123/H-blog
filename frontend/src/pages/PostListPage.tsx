@@ -12,6 +12,7 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "created_at", label: "最新发布" },
   { value: "views", label: "最多浏览" },
   { value: "likes", label: "最多点赞" },
+  { value: "comments", label: "最多评论" },
   { value: "score", label: "综合排序" },
 ];
 
@@ -108,7 +109,7 @@ export function PostListPage({ showCreateButton = true }: { showCreateButton?: b
                   )}
                   <div className="post-card-footer">
                     <Typography.Text type="secondary" className="post-card-meta">
-                      <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+                      <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
                     </Typography.Text>
                     <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
                       <LikeButton targetType="post" targetId={post.id} />
