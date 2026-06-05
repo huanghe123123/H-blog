@@ -30,7 +30,7 @@ site:
 server:
   # 后端监听地址和端口
   backend_host: "0.0.0.0"
-  backend_port: 8000
+  backend_port: 7000
   # 前端开发服务器端口
   frontend_dev_port: 5173
   # API 路径前缀，一般不需要改
