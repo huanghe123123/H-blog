@@ -10,12 +10,12 @@ export interface AboutData {
 }
 
 export const aboutData: AboutData = {
-  nickname: "",
-  avatar_url: "",
-  bio: "",
-  birthday: null,
-  gender: null,
-  links: [],
+  "nickname": "huanghe123123",
+  "avatar_url": "https://github.com/huanghe123123/H-blog/blob/dev/develper_avatar.jpeg?raw=true",
+  "bio": "",
+  "birthday": "2008-05-15",
+  "gender": null,
+  "links": []
 };
 
 export function toProfile(data: AboutData): UserProfile {
