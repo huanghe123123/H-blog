@@ -23,9 +23,11 @@ function aboutWriterPlugin() {
             const ts = `import type { UserProfile, UserLink } from "../types";
 
 export interface AboutData {
+  enabled: boolean;
   nickname: string;
   avatar_url: string;
   bio: string;
+  content: string;
   birthday: string | null;
   gender: string | null;
   links: UserLink[];
@@ -42,7 +44,7 @@ export function toProfile(data: AboutData): UserProfile {
     bio: data.bio,
     birthday: data.birthday,
     gender: data.gender,
-    role: "owner",
+    role: "developer",
     created_at: "",
     links: data.links,
   };
@@ -69,7 +71,7 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8000",
         bypass(req) {
-          if (req.url?.startsWith("/api/about/")) return false;
+          if (req.url?.startsWith("/api/about/")) return req.url;
         },
       },
     },

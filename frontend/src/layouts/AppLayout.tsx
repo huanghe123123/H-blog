@@ -3,6 +3,7 @@ import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRou
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
+import { aboutData } from "../data/about";
 import { useAuth } from "../hooks/useAuth";
 import { PostListPage } from "../pages/PostListPage";
 
@@ -86,13 +87,13 @@ export function AppLayout() {
     ? [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
-        { path: "/about", icon: <Info size={18} />, label: "关于" },
+        ...(aboutData.enabled ? [{ path: "/about", icon: <Info size={18} />, label: "关于" }] : []),
         ...(user.role === "admin" || user.role === "owner" ? [{ path: "/admin/users", icon: <Shield size={18} />, label: "用户管理" }] : [])
       ]
     : [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
-        { path: "/about", icon: <Info size={18} />, label: "关于" },
+        ...(aboutData.enabled ? [{ path: "/about", icon: <Info size={18} />, label: "关于" }] : []),
       ];
 
   return (

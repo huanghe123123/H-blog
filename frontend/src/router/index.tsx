@@ -4,7 +4,7 @@ import { AdminRoute, ProtectedRoute } from "../components/ProtectedRoute";
 import { AppLayout } from "../layouts/AppLayout";
 import { AdminUsersPage } from "../pages/AdminUsersPage";
 import { AboutPage } from "../pages/AboutPage";
-import { AboutEditorPage } from "../pages/AboutEditorPage";
+import { aboutData } from "../data/about";
 import { CategoryPage } from "../pages/CategoryPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/index", element: <HomePage /> },
-      { path: "/about", element: <AboutPage /> },
+      ...(aboutData.enabled ? [{ path: "/about", element: <AboutPage /> }] : []),
       { path: "/categories", element: <CategoryPage /> },
       { path: "/posts/search", element: <SearchPage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          { path: "/about/edit", element: <AboutEditorPage /> },
+
           { path: "/posts/new", element: <PostEditorPage /> },
           { path: "/posts/:id/edit", element: <PostEditorPage /> },
           { path: "/profile", element: <ProfileRedirect /> },

@@ -2,6 +2,7 @@ import MDEditor from "@uiw/react-md-editor";
 import { useCallback, useRef, useState } from "react";
 import remarkBreaks from "remark-breaks";
 import { ACFUN_IDS, acfunImageUrl } from "../utils/acfun";
+import { ICONS, CATEGORIES } from "../utils/lucideIcons";
 
 const EMOJI_LIST = [
   "😀","😂","🤣","😊","😍","🥰","😎","🤩","😏","😢","😡","👍","👎","🎉","🔥",
@@ -18,13 +19,15 @@ export function BioEditor({ value, onChange, height = 200 }: BioEditorProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [acfunOpen, setAcfunOpen] = useState(false);
+  const [lucideOpen, setLucideOpen] = useState(false);
   const [pickerStyle, setPickerStyle] = useState<React.CSSProperties>({});
 
-  const openPicker = useCallback((type: "emoji" | "acfun", btnEl: HTMLElement) => {
+  const openPicker = useCallback((type: "emoji" | "acfun" | "lucide", btnEl: HTMLElement) => {
     const rect = btnEl.getBoundingClientRect();
     setPickerStyle({ top: rect.bottom + 4, left: rect.left });
-    if (type === "emoji") { setEmojiOpen(true); setAcfunOpen(false); }
-    else { setAcfunOpen(true); setEmojiOpen(false); }
+    setEmojiOpen(type === "emoji");
+    setAcfunOpen(type === "acfun");
+    setLucideOpen(type === "lucide");
   }, []);
 
   const insertText = (text: string) => {
@@ -43,6 +46,7 @@ export function BioEditor({ value, onChange, height = 200 }: BioEditorProps) {
     }
     setEmojiOpen(false);
     setAcfunOpen(false);
+    setLucideOpen(false);
   };
 
   return (
@@ -82,6 +86,37 @@ export function BioEditor({ value, onChange, height = 200 }: BioEditorProps) {
                     title={`ac${id}`}>
                     <img src={acfunImageUrl(id)} alt={`ac${id}`} loading="lazy" />
                   </button>
+                ))}
+              </div>
+            </>
+          )}
+        </span>
+        <span className="emoji-btn-wrap">
+          <button type="button" tabIndex={-1}
+            className="comment-editor-toolbar-btn"
+            onClick={(e) => lucideOpen ? setLucideOpen(false) : openPicker("lucide", e.currentTarget)}
+            title="Lucide 图标">🎨</button>
+          {lucideOpen && (
+            <>
+              <div className="emoji-overlay" onClick={() => setLucideOpen(false)} />
+              <div className="emoji-picker lucide-picker" style={pickerStyle}>
+                {CATEGORIES.map((cat) => (
+                  <div key={cat.label}>
+                    <div className="lucide-cat-label">{cat.label}</div>
+                    <div className="lucide-cat-grid">
+                      {cat.icons.map((name) => {
+                        const svg = ICONS[name];
+                        if (!svg) return null;
+                        return (
+                          <button key={name} type="button" tabIndex={-1}
+                            className="lucide-icon-btn"
+                            onMouseDown={(ev) => { ev.preventDefault(); insertText(svg); }}
+                            title={name}
+                            dangerouslySetInnerHTML={{ __html: svg }} />
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
             </>

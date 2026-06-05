@@ -1,5 +1,6 @@
 import MDEditor from "@uiw/react-md-editor";
 import { Avatar, Button, Card, Tag, Tooltip, Typography } from "antd";
+import rehypeRaw from "rehype-raw";
 import remarkBreaks from "remark-breaks";
 import { Edit3, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -7,23 +8,24 @@ import { resolveAcfunEmoji } from "../utils/acfun";
 import type { UserProfile } from "../types";
 
 const genderLabels: Record<string, string> = { male: "男", female: "女", other: "其他" };
-const roleLabels: Record<string, string> = { admin: "管理员", owner: "站主", moderator: "版主", user: "普通用户" };
+const roleLabels: Record<string, string> = { admin: "管理员", owner: "站主", moderator: "版主", user: "普通用户", developer: "开发者" };
 
 interface ProfileSideCardProps {
   profile: UserProfile;
-  publishedCount: number;
-  yearsCount: number;
-  age: number | null;
+  publishedCount: React.ReactNode;
+  yearsCount: React.ReactNode;
+  age: React.ReactNode;
   isOwn: boolean;
   onEdit?: () => void;
+  onAvatarClick?: () => void;
 }
 
-export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOwn, onEdit }: ProfileSideCardProps) {
+export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOwn, onEdit, onAvatarClick }: ProfileSideCardProps) {
   const navigate = useNavigate();
   return (
     <Card className="side-card profile-left-card" style={{ borderRadius: 0 }} title={profile.role === "owner" ? "站主" : undefined}>
       <div className="side-profile">
-        <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} style={{ cursor: "pointer" }} onClick={() => navigate(`/users/${profile.id}`)} />
+        <Avatar size={80} src={profile.avatar_url} icon={<UserRound />} style={{ cursor: "pointer" }} onClick={() => onAvatarClick ? onAvatarClick() : navigate(`/users/${profile.id}`)} />
         <Typography.Title level={4} style={{ margin: "12px 0 4px" }}>
           {profile.nickname || profile.username}
         </Typography.Title>
@@ -32,7 +34,7 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
         </Tag>
         {profile.bio && (
           <div data-color-mode="light" style={{ marginTop: 10, fontSize: 14, wordBreak: "break-word", overflowWrap: "break-word" }}>
-            <MDEditor.Markdown source={resolveAcfunEmoji(profile.bio)} remarkPlugins={[remarkBreaks]} />
+            <MDEditor.Markdown source={resolveAcfunEmoji(profile.bio)} remarkPlugins={[remarkBreaks]} rehypePlugins={[rehypeRaw]} />
           </div>
         )}
         {isOwn && onEdit && (
@@ -47,7 +49,7 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
           </div>
           <div className="side-stat">
             <span className="side-stat-num">{yearsCount}</span>
-            <span className="side-stat-label">年份</span>
+            <span className="side-stat-label">加入年数</span>
           </div>
           <div className="side-stat">
             <span className="side-stat-num">{age ?? "-"}</span>
