@@ -102,7 +102,7 @@ def get_comment_or_404(db: Session, comment_id: int) -> Comment:
 
 
 def delete_comment(db: Session, comment: Comment, user: User) -> None:
-    if comment.user_id != user.id and user.role != "admin":
+    if comment.user_id != user.id and user.role not in ("admin", "owner"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以删除此评论")
     db.delete(comment)
     db.commit()

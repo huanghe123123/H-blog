@@ -1,4 +1,4 @@
-import { Avatar, Button, Layout, Menu, Modal, Space, Typography } from "antd";
+import { Avatar, Button, Layout, Modal, Space, Typography } from "antd";
 import { LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -31,23 +31,28 @@ export function AppLayout() {
     }
   }, [location.pathname, location.search]);
 
-  const menuItems = user
-    ? [
-        { key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> },
-        ...(user.role === "admin" ? [{ key: "/admin/users", icon: <Shield size={18} />, label: <Link to="/admin/users">用户管理</Link> }] : [])
-      ]
-    : [{ key: "/", icon: <Newspaper size={18} />, label: <Link to="/">文章</Link> }];
+  const isActive = (path: string) => location.pathname === path || (path === "/" && !location.pathname.startsWith("/admin"));
 
-  const selectedKey = location.pathname.startsWith("/admin")
-    ? "/admin/users"
-    : "/";
+  const navLinks = user
+    ? [
+        { path: "/", icon: <Newspaper size={18} />, label: "主页" },
+        ...(user.role === "admin" || user.role === "owner" ? [{ path: "/admin/users", icon: <Shield size={18} />, label: "用户管理" }] : [])
+      ]
+    : [{ path: "/", icon: <Newspaper size={18} />, label: "文章" }];
 
   return (
     <Layout className="app-shell">
       <Header className="app-header">
         <div className="header-left">
           <Typography.Title level={4} className="brand">{siteName}</Typography.Title>
-          <Menu mode="horizontal" selectedKeys={[selectedKey]} items={menuItems} className="header-menu" />
+          <nav className="header-nav">
+            {navLinks.map((link) => (
+              <Link key={link.path} to={link.path} className={`header-nav-link${isActive(link.path) ? " active" : ""}`}>
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </nav>
         </div>
         <Space className="header-right">
           <Button type="text" icon={<Search size={16} />} onClick={() => setSearchOpen(true)} />

@@ -11,6 +11,8 @@ const ROLE_OPTIONS = [
   { value: "admin", label: "管理员" }
 ];
 
+const isAdminLike = (role: string) => role === "admin" || role === "owner";
+
 export function AdminUsersPage() {
   const { user: me } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -67,7 +69,7 @@ export function AdminUsersPage() {
                 value={role}
                 options={ROLE_OPTIONS}
                 style={{ width: 100 }}
-                disabled={record.id === me?.id || record.role === "admin"}
+                disabled={record.id === me?.id || record.role === "owner" || (!isAdminLike(me?.role ?? "") && record.role === "admin")}
                 onChange={(value) => onRoleChange(record.id, value)}
               />
             )
@@ -78,7 +80,7 @@ export function AdminUsersPage() {
             render: (active, record) => (
               <Switch
                 checked={active}
-                disabled={record.id === me?.id || record.role === "admin"}
+                disabled={record.id === me?.id || record.role === "owner" || (!isAdminLike(me?.role ?? "") && record.role === "admin")}
                 onChange={(checked) => onStatusChange(record.id, checked)}
               />
             )
@@ -92,12 +94,15 @@ export function AdminUsersPage() {
             title: "操作",
             key: "actions",
             width: 80,
-            render: (_, record) =>
-              record.id !== me?.id && record.role !== "admin" ? (
+            render: (_, record) => {
+              if (record.id === me?.id || record.role === "owner") return null;
+              if (record.role === "admin" && !isAdminLike(me?.role ?? "")) return null;
+              return (
                 <Popconfirm title="确认删除该用户？" onConfirm={() => onDelete(record.id)}>
                   <Button size="small" danger icon={<Trash2 size={14} />} />
                 </Popconfirm>
-              ) : null
+              );
+            }
           }
         ]}
       />

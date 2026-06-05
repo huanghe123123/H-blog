@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import _apply_owner_role, get_current_user
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.user import User
@@ -35,12 +35,12 @@ def get_site_owner(db: Session = Depends(get_db)):
     if not owner:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="No users found")
-    return owner
+    return _apply_owner_role(owner)
 
 
 @router.get("/{user_id}", response_model=UserProfile)
 def get_user_profile(user_id: int, db: Session = Depends(get_db)):
-    return get_user_or_404(db, user_id)
+    return _apply_owner_role(get_user_or_404(db, user_id))
 
 
 @router.get("/{user_id}/comments", response_model=list[CommentPublic])

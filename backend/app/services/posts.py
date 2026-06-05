@@ -91,7 +91,7 @@ def list_posts(
     )
     if status_filter:
         query = query.where(Post.status == status_filter)
-        if status_filter == PostStatus.draft.value and (not user or user.role != "admin"):
+        if status_filter == PostStatus.draft.value and (not user or user.role not in ("admin", "owner")):
             query = query.where(Post.author_id == user.id if user else 0)
     else:
         query = query.where(Post.status == PostStatus.published.value)
@@ -191,7 +191,7 @@ def get_post_detail(db: Session, post_id: int) -> Post:
 
 
 def update_post(db: Session, post: Post, user: User, payload: PostUpdate) -> Post:
-    if post.author_id != user.id and user.role != "admin":
+    if post.author_id != user.id and user.role not in ("admin", "owner"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以编辑此文章")
     old_status = post.status
     for field, value in payload.model_dump(exclude_unset=True).items():
@@ -204,7 +204,7 @@ def update_post(db: Session, post: Post, user: User, payload: PostUpdate) -> Pos
 
 
 def delete_post(db: Session, post: Post, user: User) -> None:
-    if post.author_id != user.id and user.role != "admin":
+    if post.author_id != user.id and user.role not in ("admin", "owner"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只有作者或管理员可以删除此文章")
     db.delete(post)
     db.commit()

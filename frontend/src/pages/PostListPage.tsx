@@ -113,7 +113,7 @@ export function PostListPage({ showCreateButton = true, syncUrl = true }: { show
                     </Typography.Text>
                     <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
                       <LikeButton targetType="post" targetId={post.id} />
-                      {user?.role === "admin" && (
+                      {(user?.role === "admin" || user?.role === "owner") && (
                         <>
                           <Button size="small" icon={<Edit3 size={14} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
                           <Popconfirm title="确认删除文章？" onConfirm={() => onDeletePost(post.id)}>

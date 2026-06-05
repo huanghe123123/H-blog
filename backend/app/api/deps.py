@@ -3,11 +3,20 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.roles import UserRole
 from app.db.session import get_db
 from app.models.user import User
 from app.services.auth_service import cleanup_expired, is_blacklisted
 from app.utils.security import decode_token
+
+
+def _apply_owner_role(user: User) -> User:
+    """If the user matches the configured site owner, promote role to owner in memory."""
+    settings = get_settings()
+    if settings.site_owner and (user.username == settings.site_owner or str(user.id) == settings.site_owner):
+        user.role = UserRole.OWNER
+    return user
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
@@ -26,7 +35,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户不存在或已被停用")
     cleanup_expired(db)
-    return user
+    return _apply_owner_role(user)
 
 
 def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
@@ -43,10 +52,10 @@ def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Option
     user = db.get(User, int(payload["sub"]))
     if not user or not user.is_active:
         return None
-    return user
+    return _apply_owner_role(user)
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role not in (UserRole.ADMIN, UserRole.OWNER):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要管理员权限")
     return current_user

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import type { UserProfile } from "../types";
 
 const genderLabels: Record<string, string> = { male: "男", female: "女", other: "其他" };
-const roleLabels: Record<string, string> = { admin: "管理员", moderator: "版主", user: "普通用户" };
+const roleLabels: Record<string, string> = { admin: "管理员", owner: "站主", moderator: "版主", user: "普通用户" };
 
 interface ProfileSideCardProps {
   profile: UserProfile;
@@ -25,7 +25,7 @@ export function ProfileSideCard({ profile, publishedCount, yearsCount, age, isOw
         <Typography.Title level={4} style={{ margin: "12px 0 4px" }}>
           {profile.nickname || profile.username}
         </Typography.Title>
-        <Tag color={profile.role === "admin" ? "red" : profile.role === "moderator" ? "blue" : "default"}>
+        <Tag color={profile.role === "owner" ? "gold" : profile.role === "admin" ? "red" : profile.role === "moderator" ? "blue" : "default"}>
           {roleLabels[profile.role] || profile.role}
         </Tag>
         {profile.bio && (

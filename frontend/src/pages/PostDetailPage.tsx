@@ -157,7 +157,7 @@ export function PostDetailPage() {
         </div>
         <Space>
           <LikeButton targetType="post" targetId={post.id} />
-          {(isAuthor || user?.role === "admin") && (
+          {(isAuthor || user?.role === "admin" || user?.role === "owner") && (
             <>
               <Button icon={<Edit3 size={16} />} onClick={() => navigate(`/posts/${post.id}/edit`)}>编辑</Button>
               <Popconfirm title="确认删除文章？" onConfirm={onDeletePost}>
@@ -244,7 +244,7 @@ export function PostDetailPage() {
                       回复
                     </Button>
                   )}
-                  {(user?.id === comment.user_id || user?.role === "admin") && (
+                  {(user?.id === comment.user_id || user?.role === "admin" || user?.role === "owner") && (
                     <Popconfirm title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await refreshComments(); }}>
                       <Button danger size="small" icon={<Trash2 size={14} />} />
                     </Popconfirm>
@@ -281,7 +281,7 @@ export function PostDetailPage() {
                             回复
                           </Button>
                         )}
-                        {(user?.id === reply.user_id || user?.role === "admin") && (
+                        {(user?.id === reply.user_id || user?.role === "admin" || user?.role === "owner") && (
                           <Popconfirm title="确认删除评论？" onConfirm={async () => { await deleteComment(reply.id); await refreshComments(); }}>
                             <Button danger size="small" icon={<Trash2 size={14} />} />
                           </Popconfirm>

@@ -45,6 +45,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 999;
+  overflow: hidden;
 }
 
 .header-left {
@@ -53,9 +54,35 @@ body {
   gap: 24px;
 }
 
-.header-menu {
-  border-bottom: none !important;
-  background: transparent !important;
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 16px;
+  height: 56px;
+  border-radius: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.header-nav-link:hover {
+  background: rgba(73, 177, 245, .08);
+  color: var(--primary);
+}
+
+.header-nav-link.active {
+  background: rgba(73, 177, 245, .12);
+  color: var(--primary);
 }
 
 .brand {

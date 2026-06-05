@@ -387,7 +387,7 @@ export function UserProfilePage() {
                             回复
                           </Button>
                         )}
-                        {(me?.id === c.user_id || me?.role === "admin") && (
+                        {(me?.id === c.user_id || me?.role === "admin" || me?.role === "owner") && (
                           <Popconfirm title="确认删除？" onConfirm={async () => { await deleteProfileComment(c.id); await refreshPComments(); }}>
                             <Button type="text" danger size="small" icon={<Trash2 size={12} />} />
                           </Popconfirm>
@@ -421,7 +421,7 @@ export function UserProfilePage() {
                                   回复
                                 </Button>
                               )}
-                              {(me?.id === reply.user_id || me?.role === "admin") && (
+                              {(me?.id === reply.user_id || me?.role === "admin" || me?.role === "owner") && (
                                 <Popconfirm title="确认删除？" onConfirm={async () => { await deleteProfileComment(reply.id); await refreshPComments(); }}>
                                   <Button type="text" danger size="small" icon={<Trash2 size={12} />} />
                                 </Popconfirm>
