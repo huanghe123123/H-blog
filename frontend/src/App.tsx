@@ -8,13 +8,32 @@ import { router } from "./router";
 
 export default function App() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchSiteConfig().then((cfg) => {
       document.title = cfg.site_name;
       setConfig(cfg);
+    }).catch(() => {
+      setError(true);
     });
   }, []);
+
+  if (error) {
+    // Fallback: use defaults if config endpoint is unreachable
+    const fallback: SiteConfig = {
+      site_name: "Blog",
+      site_description: "",
+      site_owner: 0,
+      site_name_color: "#1f2d3d",
+      site_description_color: "#6c757e",
+      primary_color: "#1f6feb",
+      border_radius: 6,
+      locale: "zh-CN",
+      features: { email_verification: true, comments: true, likes: true },
+    };
+    return renderApp(fallback);
+  }
 
   if (!config) {
     return (
@@ -24,6 +43,10 @@ export default function App() {
     );
   }
 
+  return renderApp(config);
+}
+
+function renderApp(config: SiteConfig) {
   return (
     <ConfigProvider
       locale={config.locale === "zh-CN" ? zhCN : undefined}
