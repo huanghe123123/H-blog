@@ -45,7 +45,6 @@ class UserPublic(ORMModel):
     role: str
     is_active: bool
     is_verified: bool
-    verification_url: str | None = None
     links: list[UserLink] | None = None
     created_at: datetime
     updated_at: datetime

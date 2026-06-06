@@ -20,10 +20,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 @limiter.limit(get_settings().rate_limit_register)
 def register(request: Request, payload: UserRegister, db: Session = Depends(get_db)):
-    user = create_user(db, payload)
-    if user.verification_token:
-        user.verification_url = f"{get_settings().frontend_url}/verify-email?token={user.verification_token}"
-    return user
+    return create_user(db, payload)
 
 
 @router.post("/login", response_model=UserPublic)
@@ -139,8 +136,5 @@ def verify(payload: EmailVerify, db: Session = Depends(get_db)):
 
 @router.post("/resend-verification", response_model=Message)
 def resend(payload: EmailResend, db: Session = Depends(get_db)):
-    user = resend_verification(db, payload)
-    detail = "验证邮件已重新发送"
-    if user.verification_token:
-        detail += f"，验证链接: {get_settings().frontend_url}/verify-email?token={user.verification_token}"
-    return Message(message=detail)
+    resend_verification(db, payload)
+    return Message(message="验证邮件已重新发送")

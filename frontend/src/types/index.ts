@@ -16,7 +16,6 @@ export type User = {
   role: string;
   is_active: boolean;
   is_verified: boolean;
-  verification_url?: string | null;
   links?: UserLink[] | null;
   created_at: string;
   updated_at: string;
