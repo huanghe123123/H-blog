@@ -74,9 +74,9 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 
 访问：
 
-- 前端：http://localhost:5173
-- 后端 API：http://localhost:7000
-- OpenAPI 文档：http://localhost:7000/docs
+- 前端：http://你的域名/ip:5173
+- 后端 API：http://你的域名/ip:7000
+- OpenAPI 文档：http://你的域名/ip:7000/docs
 
 ## 生产部署
 
@@ -173,7 +173,7 @@ docker-compose pull && docker-compose up -d
 docker image prune -f    # 清理旧镜像
 ```
 
-### 5. 腾讯云安全组
+### 5. 安全组
 
 确保入站规则放行：TCP 80、443（Nginx）、7000（后端直连调试）。
 
