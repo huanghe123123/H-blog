@@ -8,6 +8,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Restore SPA path after GitHub Pages 404 fallback
+      (function(){var r=sessionStorage.getItem("redirect");if(r){sessionStorage.removeItem("redirect");var u=new URL(r);history.replaceState(null,"",u.pathname+u.search+u.hash)}})();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
