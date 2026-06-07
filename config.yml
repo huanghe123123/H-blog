@@ -1,107 +1,82 @@
 # =============================================================================
-# Blog 站点配置文件（示例）
-#
-# 使用方法：
-#   1. 复制此文件为 config.yml：cp config.example.yml config.yml
-#   2. 根据实际情况修改 config.yml
-#   3. config.yml 已加入 .gitignore，不会被提交到仓库
-#
-# 后端读取顺序：config.yml → config.example.yml → 环境变量覆盖
+# Blog 站点配置文件（可提交，不含密钥）
+# 密钥和密码请放在项目根目录的 .env 文件中
 # =============================================================================
 
 # ---------------------------------------------------------------------------
 # 站点身份
 # ---------------------------------------------------------------------------
 site:
-  # 博客名称，会显示在页面标题、导航栏、登录页等位置
   name: "My Blog"
-  # 名称文字颜色（CSS 颜色值）
   name_color: "#1f2d3d"
-  # 副标题或简介（可选，支持 Markdown）
-  description: "A modern blog built with FastAPI and React"
-  # 简介文字颜色（CSS 颜色值）
-  description_color: "#6c757e"
-  # 站长的用户 ID，设为 0 则自动使用第一个注册用户
+  description: "这是huanghe123123~~采用vibe coding方法~~制作的基于react和fastapi的博客网站"
+  description_color: "#87cefa"
   owner: 0
 
 # ---------------------------------------------------------------------------
 # 服务端口
 # ---------------------------------------------------------------------------
 server:
-  # 后端监听地址和端口
   backend_host: "0.0.0.0"
   backend_port: 7000
-  # 前端开发服务器端口
   frontend_dev_port: 5173
-  # API 路径前缀，一般不需要改
   api_prefix: "/api"
 
 # ---------------------------------------------------------------------------
-# 数据库
+# 数据库（连接信息；凭据通过 .env 的 DATABASE_URL 注入）
 # ---------------------------------------------------------------------------
 database:
-  host: "postgres"       # Docker Compose 内用服务名，外部部署改为实际 IP
+  host: "postgres"
   port: 5432
-  user: "blog"
-  password: "blog"       # 生产环境务必修改
   name: "blog"
 
 # ---------------------------------------------------------------------------
-# 认证与安全
+# 认证与安全（密钥通过 .env 的 SECRET_KEY 注入）
 # ---------------------------------------------------------------------------
 auth:
-  # JWT 签名密钥，生产环境用 openssl rand -hex 32 生成
-  secret_key: "change-me-in-production"
-  # JWT 签名算法
   algorithm: "HS256"
-  # 登录 token 有效期（分钟），默认 24 小时
-  access_token_expire_minutes: 1440
-  # 邮箱验证 token 有效期（秒），默认 20 分钟
+  access_token_expire_minutes: 15
+  refresh_token_expire_days: 7
+  cookie_secure: true
+  cookie_samesite: "lax"
   verification_token_expire_seconds: 1200
-  # 速率限制（每分钟每IP请求次数）
-  rate_limit_login: "5/minute"
-  rate_limit_register: "3/minute"
 
 # ---------------------------------------------------------------------------
-# 邮件（邮箱验证用）
+# 邮件（凭据通过 .env 注入）
 # ---------------------------------------------------------------------------
 email:
-  # 开发环境用 Mailpit/Mailhog（端口 1025），无需认证
-  smtp_host: "localhost"
-  smtp_port: 1025
-  smtp_user: ""
-  smtp_password: ""
-  from_address: "noreply@example.com"
+  smtp_host: "smtp.qq.com"
+  smtp_port: 465
 
 # ---------------------------------------------------------------------------
 # 前端
 # ---------------------------------------------------------------------------
 frontend:
-  # 前端访问地址（用于构造验证链接等）
-  url: "http://localhost:5173"
-  # CORS 允许的来源，生产环境改为实际域名
+  url: "https://blog.huanghe123123.asia"
   cors_origins:
     - "http://localhost:5173"
     - "http://127.0.0.1:5173"
+    - "https://blog.huanghe123123.asia"
 
 # ---------------------------------------------------------------------------
 # 主题外观
 # ---------------------------------------------------------------------------
 theme:
-  # Ant Design 主色调
   primary_color: "#1f6feb"
-  # 圆角大小
   border_radius: 6
-  # 界面语言: "zh-CN" 中文 / "en-US" 英文（英文需自行翻译前端文案）
   locale: "zh-CN"
+
+# ---------------------------------------------------------------------------
+# GitHub OAuth（client_secret 通过 .env 注入）
+# ---------------------------------------------------------------------------
+github:
+  client_id: "Ov23linl4usIocovIZdy"
+  redirect_uri: "https://api.huanghe123123.asia/api/auth/github/callback"
 
 # ---------------------------------------------------------------------------
 # 功能开关
 # ---------------------------------------------------------------------------
 features:
-  # 是否要求邮箱验证后才能登录
   email_verification: true
-  # 是否开启评论
   comments_enabled: true
-  # 是否开启点赞
   likes_enabled: true

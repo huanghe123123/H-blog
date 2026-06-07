@@ -2,15 +2,15 @@ services:
   postgres:
     image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     environment:
-      POSTGRES_USER: blog
-      POSTGRES_PASSWORD: blog
-      POSTGRES_DB: blog
+      POSTGRES_USER: ${POSTGRES_USER:-blog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blog}
+      POSTGRES_DB: ${POSTGRES_DB:-blog}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U blog -d blog"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blog} -d ${POSTGRES_DB:-blog}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -35,6 +35,7 @@ services:
     volumes:
       - ./backend:/app
       - ./config.yml:/app/config.yml
+      - ./.env:/app/.env
 
   frontend:
     build:

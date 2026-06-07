@@ -49,15 +49,21 @@
 │   └── package.json
 ├── deploy/
 │   └── docker-compose.yml   # 服务器生产部署 Compose
+├── .env                     # 密钥（gitignored，不提交）
+├── config.yml               # 站点公开配置（可提交）
 ├── .github/workflows/
 │   └── deploy.yml           # CI/CD 工作流
 ├── docker-compose.yml       # 本地开发 Compose
-└── config.example.yml       # 后端配置模板
 ```
 
 ## 本地开发
 
 ```bash
+# 首次使用：创建 .env（从下方模板复制，本地开发可全用默认值）
+# DATABASE_URL=postgresql+psycopg://blog:blog@postgres:5432/blog
+# SECRET_KEY=dev-secret-key-not-for-production
+# SMTP_USER= SMTP_PASSWORD= SMTP_FROM_EMAIL= GITHUB_CLIENT_SECRET= 可留空
+
 # 启动全部服务（Postgres + 后端 + 前端）
 docker compose up -d
 
@@ -99,14 +105,18 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 mkdir -p /opt/blog
 cd /opt/blog
 
-# 放入 deploy/docker-compose.yml 和 config.yml
-# config.yml 中关键项：
-#   server.backend_port: 7000
-#   database.host: postgres（容器服务名）
-#   frontend.url: "https://blog.huanghe123123.asia"
-#   frontend.cors_origins: ["https://blog.huanghe123123.asia"]
-#   auth.secret_key: 用 openssl rand -hex 32 生成
-#   email.*: QQ 邮箱 SMTP 配置（smtp.qq.com, 端口 465）
+# 放入 deploy/docker-compose.yml、config.yml、.env
+# config.yml — 站点公开配置（域名、主题、开关等），无密钥，可直接从仓库复制
+# .env       — 所有密钥和密码（gitignored，需手动创建），内容如下：
+#
+#   DATABASE_URL=postgresql+psycopg://user:pass@postgres:5432/blog
+#   SECRET_KEY=<openssl rand -hex 32>
+#   SMTP_USER=your@email.com
+#   SMTP_PASSWORD=your_smtp_password
+#   SMTP_FROM_EMAIL=your@email.com
+#   GITHUB_CLIENT_SECRET=your_github_oauth_secret
+#
+#   也可追加 POSTGRES_USER / POSTGRES_PASSWORD 覆盖 docker-compose 默认值
 
 # 登录 ACR
 docker login crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com
@@ -173,6 +183,8 @@ docker-compose pull && docker-compose up -d
 docker image prune -f    # 清理旧镜像
 ```
 
+> **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `config.yml` 和 `.env`（见步骤 1），这两个文件不进 Docker 镜像，通过 volume 挂载到容器。后续更新只需 `pull && up -d`，配置文件无需重复操作。
+
 ### 5. 安全组
 
 确保入站规则放行：TCP 80、443（Nginx）、7000（后端直连调试）。
@@ -192,6 +204,10 @@ docker image prune -f    # 清理旧镜像
 ### 邮件验证链接点不开
 
 确认 `config.yml` 中 `frontend.url` 为前端域名 `https://blog.huanghe123123.asia`（末尾不带 `/`）。
+
+### 后端启动报数据库连接失败
+
+确认 `.env` 中 `DATABASE_URL` 的用户名密码与 docker-compose 的 `POSTGRES_USER` / `POSTGRES_PASSWORD` 一致。本地开发默认均为 `blog:blog`。
 
 ### Docker Hub 拉取超时
 

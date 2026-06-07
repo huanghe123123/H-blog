@@ -13,7 +13,6 @@ def _load_config_yml() -> dict:
     paths = [
         Path(os.getenv("CONFIG_PATH", "")),
         root / "config.yml",
-        root / "config.example.yml",
     ]
     for path in paths:
         if path and path.exists():
