@@ -1,0 +1,674 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Blog API",
+    "version": "1.0.0",
+    "description": "Blog 后端 REST API — FastAPI + PostgreSQL"
+  },
+  "servers": [
+    { "url": "http://localhost:7000", "description": "本地开发" },
+    { "url": "https://api.huanghe123123.asia", "description": "生产环境" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "健康检查",
+        "tags": ["system"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "summary": "获取站点公开配置",
+        "tags": ["system"],
+        "responses": {
+          "200": { "description": "站点配置", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SiteConfig" } } } }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "注册",
+        "tags": ["auth"],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRegister" } } } },
+        "responses": {
+          "201": { "description": "注册成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserPublic" } } } },
+          "409": { "description": "用户名或邮箱已存在" },
+          "429": { "description": "请求过于频繁（限流 3/minute）" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "登录",
+        "tags": ["auth"],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserLogin" } } } },
+        "responses": {
+          "200": { "description": "登录成功（Set-Cookie: access_token, refresh_token）", "headers": { "Set-Cookie": { "schema": { "type": "string" } } } },
+          "401": { "description": "用户名或密码错误" },
+          "403": { "description": "邮箱未验证" },
+          "429": { "description": "请求过于频繁（限流 5/minute）" },
+          "503": { "description": "服务不可用（用户无法登录）" }
+        }
+      }
+    },
+    "/api/auth/github": {
+      "get": {
+        "summary": "GitHub OAuth 登录入口",
+        "tags": ["auth"],
+        "responses": { "302": { "description": "重定向到 GitHub 授权页面" }, "503": { "description": "GitHub 登录未配置" } }
+      }
+    },
+    "/api/auth/github/callback": {
+      "get": {
+        "summary": "GitHub OAuth 回调",
+        "tags": ["auth"],
+        "parameters": [
+          { "name": "code", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "state", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "302": { "description": "重定向回前端首页（已设置 Cookie）" }, "400": { "description": "state 不匹配或授权失败" } }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "summary": "刷新 token",
+        "tags": ["auth"],
+        "responses": {
+          "200": { "description": "刷新成功（Set-Cookie 新 token）" },
+          "401": { "description": "未提供或刷新凭据无效" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "登出",
+        "tags": ["auth"],
+        "responses": { "200": { "description": "登出成功（清除 Cookie）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } } }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "summary": "验证邮箱",
+        "tags": ["auth"],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailVerify" } } } },
+        "responses": {
+          "200": { "description": "验证成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } },
+          "404": { "description": "token 无效" },
+          "410": { "description": "token 已过期" }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "summary": "重新发送验证邮件",
+        "tags": ["auth"],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailResend" } } } },
+        "responses": {
+          "200": { "description": "已重新发送", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } },
+          "400": { "description": "无需验证（账号已验证）" },
+          "404": { "description": "邮箱未注册" }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "summary": "获取当前用户",
+        "tags": ["users"],
+        "security": [{ "cookieAuth": [] }],
+        "responses": {
+          "200": { "description": "当前用户信息", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserPublic" } } } },
+          "401": { "description": "未登录" }
+        }
+      },
+      "put": {
+        "summary": "更新个人资料",
+        "tags": ["users"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserUpdate" } } } },
+        "responses": {
+          "200": { "description": "更新成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserPublic" } } } },
+          "401": { "description": "未登录" }
+        }
+      }
+    },
+    "/api/users/owner": {
+      "get": {
+        "summary": "获取站主信息",
+        "tags": ["users"],
+        "responses": {
+          "200": { "description": "站主信息", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } } }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "summary": "获取用户资料",
+        "tags": ["users"],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "用户资料", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } } },
+          "404": { "description": "用户不存在" }
+        }
+      }
+    },
+    "/api/users/{user_id}/comments": {
+      "get": {
+        "summary": "获取用户的留言板评论",
+        "tags": ["users"],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "评论列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CommentPublic" } } } } }
+        }
+      },
+      "post": {
+        "summary": "发表留言板评论",
+        "tags": ["users"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CommentCreate" } } } },
+        "responses": {
+          "201": { "description": "评论成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CommentPublic" } } } },
+          "401": { "description": "未登录" }
+        }
+      }
+    },
+    "/api/users/comments/{comment_id}": {
+      "delete": {
+        "summary": "删除留言板评论",
+        "tags": ["users"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "comment_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "删除成功" }, "401": { "description": "未登录" }, "403": { "description": "无权删除" } }
+      }
+    },
+    "/api/posts": {
+      "post": {
+        "summary": "创建文章",
+        "tags": ["posts"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostCreate" } } } },
+        "responses": {
+          "201": { "description": "创建成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostPublic" } } } },
+          "401": { "description": "未登录" }
+        }
+      },
+      "get": {
+        "summary": "获取文章列表",
+        "tags": ["posts"],
+        "parameters": [
+          { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "published"] } },
+          { "name": "author_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "sort_by", "in": "query", "schema": { "type": "string", "enum": ["created_at", "views", "likes", "comments", "score"] } },
+          { "name": "date_from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "date_to", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["技术", "创作", "生活", "交流", "公告"] } }
+        ],
+        "responses": {
+          "200": { "description": "文章列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PostList" } } } } }
+        }
+      }
+    },
+    "/api/posts/search": {
+      "get": {
+        "summary": "搜索文章",
+        "tags": ["posts"],
+        "parameters": [
+          { "name": "keyword", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "sort_by", "in": "query", "schema": { "type": "string", "enum": ["created_at", "views", "likes", "comments", "score"] } },
+          { "name": "date_from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "date_to", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "fuzzy", "in": "query", "schema": { "type": "boolean", "default": false } },
+          { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["技术", "创作", "生活", "交流", "公告"] } }
+        ],
+        "responses": {
+          "200": { "description": "搜索结果", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PostList" } } } } }
+        }
+      }
+    },
+    "/api/posts/{post_id}": {
+      "get": {
+        "summary": "获取文章详情",
+        "tags": ["posts"],
+        "parameters": [{ "name": "post_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "文章详情", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostPublic" } } } },
+          "404": { "description": "文章不存在" }
+        }
+      },
+      "put": {
+        "summary": "更新文章",
+        "tags": ["posts"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "post_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostUpdate" } } } },
+        "responses": {
+          "200": { "description": "更新成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PostPublic" } } } },
+          "401": { "description": "未登录" },
+          "403": { "description": "无权修改（非作者）" },
+          "404": { "description": "文章不存在" }
+        }
+      },
+      "delete": {
+        "summary": "删除文章",
+        "tags": ["posts"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "post_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "删除成功" }, "401": { "description": "未登录" }, "403": { "description": "无权删除（非作者/非管理员）" }, "404": { "description": "文章不存在" } }
+      }
+    },
+    "/api/posts/{post_id}/comments": {
+      "get": {
+        "summary": "获取文章评论",
+        "tags": ["posts"],
+        "parameters": [{ "name": "post_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "评论列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CommentPublic" } } } } }
+        }
+      },
+      "post": {
+        "summary": "发表文章评论",
+        "tags": ["posts"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "post_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CommentCreate" } } } },
+        "responses": {
+          "201": { "description": "评论成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CommentPublic" } } } },
+          "401": { "description": "未登录" }
+        }
+      }
+    },
+    "/api/comments/{comment_id}": {
+      "delete": {
+        "summary": "删除文章评论",
+        "tags": ["comments"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "comment_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "删除成功" }, "401": { "description": "未登录" }, "403": { "description": "无权删除" } }
+      }
+    },
+    "/api/likes": {
+      "post": {
+        "summary": "点赞",
+        "tags": ["likes"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LikeRequest" } } } },
+        "responses": { "201": { "description": "点赞成功" }, "401": { "description": "未登录" } }
+      },
+      "delete": {
+        "summary": "取消点赞",
+        "tags": ["likes"],
+        "security": [{ "cookieAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LikeRequest" } } } },
+        "responses": { "204": { "description": "取消成功" }, "401": { "description": "未登录" } }
+      }
+    },
+    "/api/likes/status": {
+      "get": {
+        "summary": "查询点赞状态",
+        "tags": ["likes"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "target_type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["post", "comment"] } },
+          { "name": "target_id", "in": "query", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "点赞状态", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LikeStatus" } } } },
+          "401": { "description": "未登录" }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "获取用户列表（管理员）",
+        "tags": ["admin"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [
+          { "name": "skip", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 200 } }
+        ],
+        "responses": {
+          "200": { "description": "用户列表", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AdminUserItem" } } } } },
+          "401": { "description": "未登录" },
+          "403": { "description": "不是管理员" }
+        }
+      }
+    },
+    "/api/admin/users/{user_id}/role": {
+      "patch": {
+        "summary": "修改用户角色",
+        "tags": ["admin"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRoleUpdate" } } } },
+        "responses": {
+          "200": { "description": "修改成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminUserItem" } } } },
+          "401": { "description": "未登录" },
+          "403": { "description": "无权修改" }
+        }
+      }
+    },
+    "/api/admin/users/{user_id}/status": {
+      "patch": {
+        "summary": "启用/停用用户",
+        "tags": ["admin"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserStatusUpdate" } } } },
+        "responses": {
+          "200": { "description": "修改成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminUserItem" } } } },
+          "401": { "description": "未登录" },
+          "403": { "description": "不能停用自己或无权限" }
+        }
+      }
+    },
+    "/api/admin/users/{user_id}": {
+      "delete": {
+        "summary": "删除用户",
+        "tags": ["admin"],
+        "security": [{ "cookieAuth": [] }],
+        "parameters": [{ "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "删除成功", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminUserDeleteResponse" } } } },
+          "401": { "description": "未登录" },
+          "403": { "description": "不能删除自己或无权限" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "登录后浏览器自动携带 httpOnly cookie"
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "ok" }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "SiteConfig": {
+        "type": "object",
+        "properties": {
+          "site_name": { "type": "string", "example": "H-blog" },
+          "site_description": { "type": "string" },
+          "site_owner": { "type": "integer" },
+          "site_name_color": { "type": "string" },
+          "site_description_color": { "type": "string" },
+          "primary_color": { "type": "string" },
+          "border_radius": { "type": "integer" },
+          "locale": { "type": "string", "enum": ["zh-CN", "en-US"] },
+          "features": {
+            "type": "object",
+            "properties": {
+              "email_verification": { "type": "boolean" },
+              "comments": { "type": "boolean" },
+              "likes": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "UserLink": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "maxLength": 500 },
+          "label": { "type": "string", "maxLength": 50 },
+          "icon": { "type": "string", "maxLength": 50 }
+        },
+        "required": ["url", "label", "icon"]
+      },
+      "UserRegister": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "minLength": 3, "maxLength": 50, "pattern": "^[a-zA-Z0-9_]+$" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8, "maxLength": 128 }
+        },
+        "required": ["username", "email", "password"]
+      },
+      "UserLogin": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string", "description": "用户名或邮箱" },
+          "password": { "type": "string" }
+        },
+        "required": ["identifier", "password"]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "nickname": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "bio": { "type": "string", "nullable": true },
+          "birthday": { "type": "string", "format": "date", "nullable": true },
+          "gender": { "type": "string", "enum": ["male", "female", "other"], "nullable": true },
+          "links": { "type": "array", "items": { "$ref": "#/components/schemas/UserLink" }, "nullable": true }
+        }
+      },
+      "UserBrief": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "nickname": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true }
+        }
+      },
+      "UserPublic": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "nickname": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "bio": { "type": "string", "nullable": true },
+          "birthday": { "type": "string", "format": "date", "nullable": true },
+          "gender": { "type": "string", "nullable": true },
+          "role": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "is_verified": { "type": "boolean" },
+          "links": { "type": "array", "items": { "$ref": "#/components/schemas/UserLink" }, "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "nickname": { "type": "string", "nullable": true },
+          "avatar_url": { "type": "string", "nullable": true },
+          "bio": { "type": "string", "nullable": true },
+          "birthday": { "type": "string", "format": "date", "nullable": true },
+          "gender": { "type": "string", "nullable": true },
+          "role": { "type": "string" },
+          "links": { "type": "array", "items": { "$ref": "#/components/schemas/UserLink" }, "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AdminUserItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "nickname": { "type": "string", "nullable": true },
+          "role": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "is_verified": { "type": "boolean" }
+        }
+      },
+      "AdminUserDeleteResponse": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } }
+      },
+      "UserRoleUpdate": {
+        "type": "object",
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "moderator", "admin"] }
+        },
+        "required": ["role"]
+      },
+      "UserStatusUpdate": {
+        "type": "object",
+        "properties": {
+          "is_active": { "type": "boolean" }
+        },
+        "required": ["is_active"]
+      },
+      "EmailVerify": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "maxLength": 128 }
+        },
+        "required": ["token"]
+      },
+      "EmailResend": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" }
+        },
+        "required": ["email"]
+      },
+      "PostCreate": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "summary": { "type": "string", "nullable": true },
+          "content": { "type": "string", "minLength": 1 },
+          "cover_url": { "type": "string", "nullable": true },
+          "tags": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "category": { "type": "string", "enum": ["技术", "创作", "生活", "交流", "公告"], "default": "创作" },
+          "status": { "type": "string", "enum": ["draft", "published"], "default": "draft" }
+        },
+        "required": ["title", "content"]
+      },
+      "PostUpdate": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "summary": { "type": "string", "nullable": true },
+          "content": { "type": "string" },
+          "cover_url": { "type": "string", "nullable": true },
+          "tags": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "category": { "type": "string", "enum": ["技术", "创作", "生活", "交流", "公告"] },
+          "status": { "type": "string", "enum": ["draft", "published"] }
+        }
+      },
+      "PostPublic": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "summary": { "type": "string", "nullable": true },
+          "content": { "type": "string" },
+          "cover_url": { "type": "string", "nullable": true },
+          "tags": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "category": { "type": "string" },
+          "status": { "type": "string" },
+          "view_count": { "type": "integer" },
+          "author_id": { "type": "integer" },
+          "author": { "$ref": "#/components/schemas/UserBrief" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "published_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "PostList": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "summary": { "type": "string", "nullable": true },
+          "cover_url": { "type": "string", "nullable": true },
+          "tags": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "category": { "type": "string" },
+          "status": { "type": "string" },
+          "view_count": { "type": "integer" },
+          "like_count": { "type": "integer" },
+          "comment_count": { "type": "integer" },
+          "reply_count": { "type": "integer" },
+          "author_id": { "type": "integer" },
+          "author": { "$ref": "#/components/schemas/UserBrief" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "published_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "CommentCreate": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "minLength": 1, "maxLength": 3000 },
+          "parent_id": { "type": "integer", "nullable": true, "description": "父评论 ID（回复评论时使用）" },
+          "reply_to_user_id": { "type": "integer", "nullable": true },
+          "reply_preview": { "type": "string", "nullable": true },
+          "profile_id": { "type": "integer", "nullable": true, "description": "留言板目标用户 ID" }
+        },
+        "required": ["content"]
+      },
+      "CommentPublic": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "content": { "type": "string" },
+          "user_id": { "type": "integer" },
+          "post_id": { "type": "integer", "nullable": true },
+          "parent_id": { "type": "integer", "nullable": true },
+          "reply_to_user_id": { "type": "integer", "nullable": true },
+          "reply_to_user": { "$ref": "#/components/schemas/UserBrief" },
+          "reply_preview": { "type": "string", "nullable": true },
+          "user": { "$ref": "#/components/schemas/UserBrief" },
+          "replies": { "type": "array", "items": { "$ref": "#/components/schemas/CommentPublic" } },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LikeRequest": {
+        "type": "object",
+        "properties": {
+          "target_type": { "type": "string", "enum": ["post", "comment"], "description": "点赞目标类型" },
+          "target_id": { "type": "integer", "exclusiveMinimum": 0, "description": "目标 ID" }
+        },
+        "required": ["target_type", "target_id"]
+      },
+      "LikeStatus": {
+        "type": "object",
+        "properties": {
+          "liked": { "type": "boolean" },
+          "count": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "system", "description": "系统/健康检查" },
+    { "name": "auth", "description": "认证（注册、登录、登出、Token 管理、邮箱验证）" },
+    { "name": "users", "description": "用户（个人信息、留言板）" },
+    { "name": "posts", "description": "文章（CRUD、搜索、评论）" },
+    { "name": "comments", "description": "评论管理" },
+    { "name": "likes", "description": "点赞（文章/评论）" },
+    { "name": "admin", "description": "管理员接口（用户管理）" }
+  ]
+}
