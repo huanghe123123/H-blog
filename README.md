@@ -53,16 +53,18 @@
 ├── config.yml               # 站点公开配置（可提交）
 ├── .github/workflows/
 │   └── deploy.yml           # CI/CD 工作流
+├── deploy/
+│   └── docker-compose.yml   # 服务器部署 Compose（拉镜像，非构建）
 ├── docker-compose.yml       # 本地开发 Compose
+├── .env.example             # 环境变量模板（可提交）
+├── config.yml               # 站点公开配置
 ```
 
 ## 本地开发
 
 ```bash
-# 首次使用：创建 .env（从下方模板复制，本地开发可全用默认值）
-# DATABASE_URL=postgresql+psycopg://blog:blog@postgres:5432/blog
-# SECRET_KEY=dev-secret-key-not-for-production
-# SMTP_USER= SMTP_PASSWORD= SMTP_FROM_EMAIL= GITHUB_CLIENT_SECRET= 可留空
+# 首次使用：复制 .env.example 为 .env，本地开发可全用默认值
+cp .env.example .env
 
 # 启动全部服务（Postgres + 后端 + 前端）
 docker compose up -d
@@ -99,26 +101,44 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 
 ### 1. 服务器初始配置
 
-在服务器上创建部署目录并放置文件：
+在服务器上创建部署目录，放入以下三个文件：
 
 ```bash
 mkdir -p /opt/blog
 cd /opt/blog
 
-# 放入 deploy/docker-compose.yml、config.yml、.env
-# config.yml — 站点公开配置（域名、主题、开关等），无密钥，可直接从仓库复制
-# .env       — 所有密钥和密码（gitignored，需手动创建），内容如下：
-#
-#   DATABASE_URL=postgresql+psycopg://user:pass@postgres:5432/blog
-#   SECRET_KEY=<openssl rand -hex 32>
-#   SMTP_USER=your@email.com
-#   SMTP_PASSWORD=your_smtp_password
-#   SMTP_FROM_EMAIL=your@email.com
-#   GITHUB_CLIENT_SECRET=your_github_oauth_secret
-#
-#   也可追加 POSTGRES_USER / POSTGRES_PASSWORD 覆盖 docker-compose 默认值
+# 1. deploy/docker-compose.yml — 从仓库复制，使用 image 拉镜像（非 build）
+# 2. config.yml              — 站点公开配置，直接从仓库复制
+# 3. .env                    — 密钥，参考仓库中的 .env.example 模板创建
+```
 
-# 登录 ACR
+**`.env` 内容模板**（完整参考 `.env.example`）：
+
+```bash
+# 数据库连接（含密码）
+DATABASE_URL=postgresql+psycopg://huanghe123123:your_password@postgres:5432/blog
+
+# JWT 密钥（openssl rand -hex 32）
+SECRET_KEY=your-random-secret
+
+# SMTP 凭据（QQ 邮箱用授权码）
+SMTP_USER=your@qq.com
+SMTP_PASSWORD=your_smtp_password
+SMTP_FROM_EMAIL=your@qq.com
+
+# GitHub OAuth
+GITHUB_CLIENT_SECRET=your_github_oauth_secret
+
+# Docker Compose 变量（deploy/docker-compose.yml 使用）
+POSTGRES_USER=huanghe123123
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=blog
+BACKEND_IMAGE=crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com/h-blog/blog-backend:latest
+```
+
+登录 ACR：
+
+```bash
 docker login crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com
 ```
 
@@ -201,9 +221,6 @@ docker image prune -f    # 清理旧镜像
 - 确认 `api` DNS 记录为 A 指向服务器 IP，且 Cloudflare 代理已关（灰色云）
 - 确认服务器安全组放行 80/443 端口
 
-### 邮件验证链接点不开
-
-确认 `config.yml` 中 `frontend.url` 为前端域名 `https://blog.huanghe123123.asia`（末尾不带 `/`）。
 
 ### 后端启动报数据库连接失败
 

@@ -7,11 +7,11 @@
 # 站点身份
 # ---------------------------------------------------------------------------
 site:
-  name: "My Blog"
+  name: "H-Blog"
   name_color: "#1f2d3d"
   description: "这是huanghe123123~~采用vibe coding方法~~制作的基于react和fastapi的博客网站"
   description_color: "#87cefa"
-  owner: 0
+  owner: 1
 
 # ---------------------------------------------------------------------------
 # 服务端口
@@ -52,11 +52,11 @@ email:
 # 前端
 # ---------------------------------------------------------------------------
 frontend:
-  url: "https://blog.huanghe123123.asia"
+  url: "http://localhost:5173" #改为你的域名
   cors_origins:
     - "http://localhost:5173"
     - "http://127.0.0.1:5173"
-    - "https://blog.huanghe123123.asia"
+    # 添加你的域名
 
 # ---------------------------------------------------------------------------
 # 主题外观
@@ -70,13 +70,13 @@ theme:
 # GitHub OAuth（client_secret 通过 .env 注入）
 # ---------------------------------------------------------------------------
 github:
-  client_id: "Ov23linl4usIocovIZdy"
-  redirect_uri: "https://api.huanghe123123.asia/api/auth/github/callback"
+  client_id: ""
+  redirect_uri: "http://localhost:5173/api/auth/github/callback"
 
 # ---------------------------------------------------------------------------
 # 功能开关
 # ---------------------------------------------------------------------------
 features:
-  email_verification: true
+  email_verification: false  # 本地测试关闭，生产通过 .env 覆盖
   comments_enabled: true
   likes_enabled: true
