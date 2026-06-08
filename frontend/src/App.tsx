@@ -55,8 +55,8 @@ function renderApp(config: SiteConfig) {
           borderRadius: config.border_radius,
           colorPrimary: "#49B1F5",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-          colorBgLayout: "#f7f9fe",
-          colorBgContainer: "#ffffff",
+          colorBgLayout: "#f0f2f5",
+          colorBgContainer: "#fafbfd",
           colorBorderSecondary: "#e8eaed",
         }
       }}
