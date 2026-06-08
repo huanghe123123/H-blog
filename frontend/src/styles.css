@@ -1,8 +1,8 @@
 :root {
   --primary: #49B1F5;
   --primary-dark: #3a8fd4;
-  --bg: #f7f9fe;
-  --card-bg: #ffffff;
+  --bg: #f0f2f5;
+  --card-bg: #fafbfd;
   --card-shadow: 0 3px 8px 6px rgba(7, 17, 27, .05);
   --card-shadow-hover: 0 3px 8px 6px rgba(7, 17, 27, .09);
   --radius: 8px;
@@ -872,6 +872,10 @@ body {
   margin: 0 -8px;
   border-radius: 4px;
   transition: background .15s;
+}
+
+.oml2d-tips {
+  transform: translateY(100px) !important;
 }
 
 .side-archive-clickable:hover {
