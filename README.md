@@ -54,16 +54,18 @@
 ├── config.yml               # 站点公开配置（可提交）
 ├── .github/workflows/
 │   └── deploy.yml           # CI/CD 工作流
+├── deploy/
+│   └── docker-compose.yml   # 服务器部署 Compose（拉镜像，非构建）
 ├── docker-compose.yml       # 本地开发 Compose
+├── .env.example             # 环境变量模板（可提交）
+├── config.yml               # 站点公开配置
 ```
 
 ## 本地开发
 
 ```bash
-# 首次使用：创建 .env（从下方模板复制，本地开发可全用默认值）
-# DATABASE_URL=postgresql+psycopg://blog:blog@postgres:5432/blog
-# SECRET_KEY=dev-secret-key-not-for-production
-# SMTP_USER= SMTP_PASSWORD= SMTP_FROM_EMAIL= GITHUB_CLIENT_SECRET= 可留空
+# 首次使用：复制 .env.example 为 .env，本地开发可全用默认值
+cp .env.example .env
 
 # 启动全部服务（Postgres + 后端 + 前端）
 docker compose up -d
@@ -103,7 +105,7 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 
 > 前提：已在 Azure 服务器上安装好 Docker（含 Compose 插件）与 Nginx。
 
-在服务器上创建部署目录并放置文件：
+在服务器上创建部署目录，放入以下三个文件：
 
 ```bash
 mkdir -p /opt/blog
@@ -178,9 +180,6 @@ docker compose logs backend  # 查看日志（含 alembic 迁移）
 - 确认 `api` DNS 记录为 A 指向服务器 IP，且 Cloudflare 代理已关（灰色云）
 - 确认服务器安全组放行 80/443 端口
 
-### 邮件验证链接点不开
-
-确认 `config.yml` 中 `frontend.url` 为前端域名 `https://blog.huanghe123123.asia`（末尾不带 `/`）。
 
 ### 后端启动报数据库连接失败
 
