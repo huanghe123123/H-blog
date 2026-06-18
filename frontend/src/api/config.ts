@@ -9,6 +9,10 @@ export type SiteConfig = {
   primary_color: string;
   border_radius: number;
   locale: string;
+  home: {
+    greeting_enabled: boolean;
+    tagline: string;
+  };
   features: {
     email_verification: boolean;
     comments: boolean;

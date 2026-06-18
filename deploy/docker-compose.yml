@@ -1,0 +1,42 @@
+# 生产部署 Compose —— 从阿里云 ACR 拉取后端镜像运行
+#
+# 放置于服务器 /opt/blog/，同目录需有 config.yml 与 .env。
+# 前端已部署到 GitHub Pages，此处仅运行 postgres + backend。
+#
+# .env 中除各项密钥外，还需提供后端镜像地址（compose 变量插值用）：
+#   BACKEND_IMAGE=crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com/<namespace>/blog-backend:latest
+# 可选覆盖默认数据库账号（默认 blog:blog）：
+#   POSTGRES_USER=... / POSTGRES_PASSWORD=...
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blog}
+      POSTGRES_DB: ${POSTGRES_DB:-blog}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blog} -d ${POSTGRES_DB:-blog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${BACKEND_IMAGE}
+    restart: unless-stopped
+    environment:
+      CONFIG_PATH: /app/config.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./config.yml:/app/config.yml
+      - ./.env:/app/.env
+
+volumes:
+  postgres_data:

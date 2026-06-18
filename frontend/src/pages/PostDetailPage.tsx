@@ -155,38 +155,32 @@ export function PostDetailPage() {
         />
       )}
       <article className="post-detail">
-      <div className="page-title-row">
-        <div>
-          <Typography.Title level={1}>{post.title}</Typography.Title>
-          <div style={{ marginBottom: 8 }}>
-            <Tag color={CATEGORY_COLORS[post.category] || "default"}>{post.category}</Tag>
-            <Typography.Text type="secondary">
-              <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
-            </Typography.Text>
+      <header className="post-detail-header">
+        <Typography.Title level={1}>{post.title}</Typography.Title>
+        <div className="post-detail-meta">
+          <Tag color={CATEGORY_COLORS[post.category] || "default"}>{post.category}</Tag>
+          {post.tags && post.tags.map((tag) => (
+            <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
+              onClick={() => navigate(`/?keyword=${encodeURIComponent(tag)}`)}>
+              {tag}
+            </Tag>
+          ))}
+          <Typography.Text type="secondary">
+            <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+          </Typography.Text>
+          <div className="post-detail-actions">
+            <LikeButton targetType="post" targetId={post.id} shape="circle" />
+            {(isAuthor || user?.role === "admin" || user?.role === "owner") && (
+              <>
+                <Button shape="circle" icon={<Edit3 size={16} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
+                <Popconfirm title="确认删除文章？" onConfirm={onDeletePost}>
+                  <Button danger shape="circle" icon={<Trash2 size={16} />} />
+                </Popconfirm>
+              </>
+            )}
           </div>
-          {post.tags && post.tags.length > 0 && (
-            <Space size={4} wrap style={{ marginTop: 8 }}>
-              {post.tags.map((tag) => (
-                <Tag key={tag} color="blue" style={{ cursor: "pointer" }}
-                  onClick={() => navigate(`/?keyword=${encodeURIComponent(tag)}`)}>
-                  {tag}
-                </Tag>
-              ))}
-            </Space>
-          )}
         </div>
-        <Space>
-          <LikeButton targetType="post" targetId={post.id} />
-          {(isAuthor || user?.role === "admin" || user?.role === "owner") && (
-            <>
-              <Button icon={<Edit3 size={16} />} onClick={() => navigate(`/posts/${post.id}/edit`)}>编辑</Button>
-              <Popconfirm title="确认删除文章？" onConfirm={onDeletePost}>
-                <Button danger icon={<Trash2 size={16} />} />
-              </Popconfirm>
-            </>
-          )}
-        </Space>
-      </div>
+      </header>
       {post.cover_url && <img className="cover" src={post.cover_url} alt={post.title} />}
       {post.summary && !isAutoSummary(post.content, post.summary) && (
         <Typography.Paragraph className="summary">{post.summary}</Typography.Paragraph>
@@ -256,7 +250,7 @@ export function PostDetailPage() {
               }
               extra={
                 <Space size={4}>
-                  <LikeButton targetType="comment" targetId={comment.id} />
+                  <LikeButton targetType="comment" targetId={comment.id} shape="circle" size="small" />
                   {user && (
                     <Button
                       type="text"
@@ -268,7 +262,7 @@ export function PostDetailPage() {
                   )}
                   {(user?.id === comment.user_id || user?.role === "admin" || user?.role === "owner") && (
                     <Popconfirm title="确认删除评论？" onConfirm={async () => { await deleteComment(comment.id); await refreshComments(); }}>
-                      <Button danger size="small" icon={<Trash2 size={14} />} />
+                      <Button danger shape="circle" size="small" icon={<Trash2 size={14} />} />
                     </Popconfirm>
                   )}
                 </Space>
@@ -293,7 +287,7 @@ export function PostDetailPage() {
                     }
                     extra={
                       <Space size={4}>
-                        <LikeButton targetType="comment" targetId={reply.id} />
+                        <LikeButton targetType="comment" targetId={reply.id} shape="circle" size="small" />
                         {user && (
                           <Button
                             type="text"
@@ -305,7 +299,7 @@ export function PostDetailPage() {
                         )}
                         {(user?.id === reply.user_id || user?.role === "admin" || user?.role === "owner") && (
                           <Popconfirm title="确认删除评论？" onConfirm={async () => { await deleteComment(reply.id); await refreshComments(); }}>
-                            <Button danger size="small" icon={<Trash2 size={14} />} />
+                            <Button danger shape="circle" size="small" icon={<Trash2 size={14} />} />
                           </Popconfirm>
                         )}
                       </Space>

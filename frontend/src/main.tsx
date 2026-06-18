@@ -8,13 +8,21 @@ import App from "./App";
 import { loadOml2d } from "oh-my-live2d";
 
 loadOml2d({
-  dockedPosition: "right",
-  stageStyle: { bottom: "56px", width: 400, height: 250 },
+  dockedPosition: "left",
+  primaryColor: "#49B1F5",
+  stageStyle: {
+    bottom: "56px",
+    width: 360,
+    height: 220,
+    // 「美水かがみ劇場」葡萄藤画框：铺满舞台，看板娘在框内"演出"
+    background: "url(/live2d/stage-frame.png) center/100% 100% no-repeat",
+    boxShadow: "0 10px 30px -10px rgba(16, 24, 40, 0.22)",
+  },
   models: [
     {
       path: "/live2d/konata/泉此方.model3.json",
-      scale: 0.16,
-      position: [20, 50],
+      scale: 0.13,
+      position: [0, 0],
     },
   ],
   tips: {

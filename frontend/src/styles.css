@@ -1,10 +1,11 @@
 :root {
   --primary: #49B1F5;
   --primary-dark: #3a8fd4;
-  --bg: #f0f2f5;
-  --card-bg: #fafbfd;
-  --card-shadow: 0 3px 8px 6px rgba(7, 17, 27, .05);
-  --card-shadow-hover: 0 3px 8px 6px rgba(7, 17, 27, .09);
+  --bg: #e8ecf2;
+  --card-bg: #fbfcff;
+  --card-border: rgba(20, 30, 48, 0.07);
+  --card-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px -8px rgba(16, 24, 40, .12);
+  --card-shadow-hover: 0 2px 6px rgba(16, 24, 40, .06), 0 16px 36px -10px rgba(16, 24, 40, .18);
   --radius: 8px;
   --radius-sm: 6px;
   --text: #1f2d3d;
@@ -175,6 +176,7 @@ body {
   width: min(420px, calc(100vw - 32px));
   box-shadow: var(--card-shadow) !important;
   border-radius: var(--radius) !important;
+  border: 1px solid var(--card-border) !important;
 }
 
 .page-title-row {
@@ -203,12 +205,26 @@ body {
 .markdown-body {
   padding: 24px;
   box-shadow: var(--card-shadow);
-  border: none;
+  border: 1px solid var(--card-border);
 }
 
 .editor-wrap {
   box-shadow: var(--card-shadow);
-  border: none;
+  border: 1px solid var(--card-border);
+}
+
+/* Floating content card (e.g. 关于页正文) — 与全站直角卡片一致 */
+.content-card,
+.content-card.ant-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 0;
+  transition: all .3s;
+}
+
+.content-card:hover {
+  box-shadow: var(--card-shadow-hover);
 }
 
 .submit-btn {
@@ -239,6 +255,22 @@ body {
   font-size: 16px;
 }
 
+/* 文章详情：标题下的分类/标签/元信息一行，动作按钮右对齐同排 */
+.post-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.post-detail-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .comment-list {
   margin-top: 18px;
   border-radius: var(--radius);
@@ -247,14 +279,14 @@ body {
 
 .comment-card {
   background: var(--card-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+  box-shadow: var(--card-shadow);
   border-radius: var(--radius);
-  border: none;
+  border: 1px solid var(--card-border);
   transition: all .3s;
 }
 
 .comment-card:hover {
-  box-shadow: 0 3px 8px 6px rgba(7, 17, 27, .06);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .comment-card .ant-card-head {
@@ -324,10 +356,11 @@ body {
 }
 
 .comment-editor {
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   overflow: visible;
   background: var(--card-bg);
+  box-shadow: var(--card-shadow);
 }
 
 .comment-editor .tiptap {
@@ -450,7 +483,7 @@ body {
 .post-card {
   box-shadow: var(--card-shadow);
   border-radius: var(--radius);
-  border: none;
+  border: 1px solid var(--card-border);
   transition: all .3s;
 }
 
@@ -688,7 +721,7 @@ body {
   background: var(--card-bg) !important;
   box-shadow: var(--card-shadow);
   margin-bottom: 0;
-  border: none;
+  border: 1px solid var(--card-border);
   transition: all .3s;
 }
 
@@ -927,7 +960,7 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--card-shadow);
   transition: all .3s;
-  border: none;
+  border: 1px solid var(--card-border);
 }
 
 .archive-post-card:hover {
@@ -1047,5 +1080,139 @@ body {
   }
   .category-nav-horizontal {
     display: flex;
+  }
+}
+
+/* ===========================================================================
+   Homepage hero — 把张力集中在这一处迎宾面板，其余保持安静
+   =========================================================================== */
+.home-hero {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 34px 36px 30px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgba(135, 206, 250, 0.20) 0%, rgba(135, 206, 250, 0) 56%),
+    radial-gradient(120% 150% at 100% 0%, rgba(73, 177, 245, 0.14) 0%, rgba(73, 177, 245, 0) 50%),
+    linear-gradient(180deg, #ffffff 0%, #fafdff 100%);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  animation: hero-rise .6s cubic-bezier(.22, .61, .36, 1) both;
+}
+
+.home-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--primary-dark);
+}
+
+.home-hero-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 4px rgba(73, 177, 245, .18);
+  animation: hero-pulse 2.4s ease-in-out infinite;
+}
+
+.home-hero-date {
+  margin-left: auto;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-hero-title.ant-typography {
+  margin: 14px 0 0 !important;
+  font-size: clamp(28px, 4.5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.home-hero-accent {
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin-top: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), #87cefa);
+}
+
+.home-hero-desc {
+  margin-top: 16px;
+  font-size: 15px;
+}
+
+.home-hero-desc .wmde-markdown {
+  background: transparent;
+}
+
+.home-hero-tagline {
+  margin-top: 14px;
+  font-size: 12.5px;
+  letter-spacing: .04em;
+  color: var(--text-secondary);
+}
+
+/* Section header (热门文章) — eyebrow encodes the real sort order */
+.home-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-section-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: var(--primary);
+}
+
+.home-section-title.ant-typography {
+  margin: 0 !important;
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(73, 177, 245, .18);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(73, 177, 245, .06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero {
+    animation: none;
+  }
+  .home-hero-dot {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-hero {
+    padding: 24px 20px 22px;
   }
 }

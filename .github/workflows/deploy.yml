@@ -42,7 +42,7 @@ jobs:
           cname: ${{ vars.CNAME }}
 
   # =========================================================================
-  # 后端：构建 Docker 镜像 → 推送到阿里云 ACR
+  # 后端：构建 Docker 镜像 → 推送到阿里云 ACR → SSH 部署到 Azure 服务器
   # =========================================================================
   backend:
     runs-on: ubuntu-latest
@@ -64,3 +64,17 @@ jobs:
           tags: |
             ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/blog-backend:latest
             ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/blog-backend:${{ github.sha }}
+
+      # 镜像推送完成后，SSH 到 Azure 服务器拉取并重启容器
+      - name: Deploy to Azure server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/blog
+            echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ secrets.ACR_REGISTRY }} -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -f

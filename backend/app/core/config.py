@@ -32,6 +32,7 @@ def _build_defaults(yml: dict) -> dict:
     features = yml.get("features", {})
     github = yml.get("github", {})
     theme = yml.get("theme", {})
+    home = yml.get("home", {})
 
     site_name = site.get("name", "My Blog")
     db_user = db.get("user", "blog")
@@ -74,6 +75,9 @@ def _build_defaults(yml: dict) -> dict:
         "primary_color": theme.get("primary_color", "#1f6feb"),
         "border_radius": theme.get("border_radius", 6),
         "locale": theme.get("locale", "zh-CN"),
+        # Home
+        "home_greeting_enabled": home.get("greeting_enabled", True),
+        "home_tagline": home.get("tagline", ""),
         # GitHub OAuth
         "github_client_id": github.get("client_id", ""),
         "github_client_secret": github.get("client_secret", ""),
@@ -126,6 +130,10 @@ class Settings(BaseSettings):
     primary_color: str = "#1f6feb"
     border_radius: int = 6
     locale: str = "zh-CN"
+
+    # Home (exposed for frontend config endpoint)
+    home_greeting_enabled: bool = True
+    home_tagline: str = ""
 
     # GitHub OAuth
     github_client_id: str = ""

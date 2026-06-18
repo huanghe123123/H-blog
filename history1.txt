@@ -1,0 +1,522 @@
+ ▐▛███▜▌   Claude Code v2.1.177
+▝▜█████▛▘  Opus 4.8 · API Usage Billing
+  ▘▘ ▝▝    ~/huanghe123123
+
+
+❯ 你好，我需要更改当前GitHub仓库部署时的工作流：之前的工作流是本地推送->github  
+  actions构建镜像并用github pages部署前端，同时把后端数据库推送到阿里云的镜像存 
+  储，腾讯云服务器再拉取镜像...详情可以看readme、claude.md以及已有的.github内容 
+  等。我现在希望把末端修改为由微软azure服务器拉取，并希望实现最后一步的自动化(  
+  如使用ssh命令)，请你帮我做一下更改。我azure服务器的用户以及ip为azureuser@40.1 
+  15.208.138，密钥在~/.ssh/BlogHuanghe123123_key.pem                            
+
+  Thought for 18s (ctrl+o to expand)
+
+● 我来先了解现有的部署工作流配置。让我查看相关文件。
+
+  Thought for 9s, listed 1 directory (ctrl+o to expand)
+
+● 让我读取现有的工作流文件和相关配置。
+
+  Thought for 13s, read 4 files (ctrl+o to expand)
+
+● 让我确认服务器端的部署文件（README 提到的 deploy/docker-compose.yml）和 SSH
+  密钥情况。
+
+  Listed 1 directory (ctrl+o to expand)
+
+❯ 等会，我们现在在哪个分支                                                      
+
+  Thought for 28s, ran 1 shell command (ctrl+o to expand)
+
+● 当前在 feature 分支（不是 main）。
+
+  工作区还有一批未提交的改动，看起来是上一阶段的 live2d
+  看板娘相关工作，跟这次改部署工作流无关：
+
+  - 已修改：backend/app/core/config.py、backend/app/main.py、config.yml、多个
+  frontend/src/...、styles.css
+  - 未跟踪：backend/config.yml、frontend/public/live2d/stage-frame.png
+
+  有两点想跟你确认一下，因为会影响我怎么做这次修改：
+
+  1. 要改的 deploy.yml 触发条件是 on: push: branches: [main] ——
+  也就是说部署工作流只在 main 分支推送时才会跑。我现在在 feature
+  分支上修改它没问题，但你打算怎么合并？（比如改完 → 提交到 feature → 合并/PR 到
+  main 触发部署）
+  2. 当前这批未提交改动怎么处理？ 它们和部署工作流无关。我建议这次只动
+  .github/workflows/deploy.yml、README.md 等部署相关文件，不碰那批 live2d
+  改动，避免混在一起。
+
+  你希望我怎么安排？或者直接告诉我"就在 feature 分支上改工作流文件"，我就开始。
+
+✻ Crunched for 29s
+
+❯ 我准备在本地合并到main再提交到远程，远程永远只显示main的内容，未提交就不乱动  
+
+  Thought for 17s (ctrl+o to expand)
+
+● 明白了：现在就在 feature
+  分支上改工作流相关文件，不碰那批未提交改动；你之后本地合并到 main 再推远程。
+
+  我继续完成被打断的探索。先看服务器端生产部署文件（README 第 51 行提到的
+  deploy/docker-compose.yml）是否真的存在。
+
+  Thought for 3m 6s, listed 1 directory (ctrl+o to expand)
+
+● 清楚了。deploy/docker-compose.yml 在仓库里其实不存在（README
+  引用了但没有），服务器端的 compose 是手动维护的；这次我只动
+  .github/workflows/deploy.yml 和 README.md 的部署说明，不碰那批未提交改动。
+
+  现在整个链路我已经摸清了。当前工作流的"末端"是：backend job 把镜像推到阿里云
+  ACR 后就结束了，服务器拉取是 README
+  里写的手动步骤。你的需求就是把这最后一步自动化 —— 在推完镜像后，由 GitHub
+  Actions 通过 SSH 连到 Azure 服务器执行拉取+重启。
+
+  动手前有两个环境细节我没法从代码里推断，写错了会导致部署直接失败，确认一下。
+
+● User answered Claude's questions:
+  ⎿  · GitHub Actions 在推送镜像到 ACR 后，自动 SSH 到 Azure 
+     服务器执行拉取+重启，用哪种方式实现？ → appleboy/ssh-action
+     · Azure 服务器上装的是哪个版本的 Compose 命令？（决定 SSH 脚本里写 docker 
+     compose 还是 docker-compose） → 天哪我好像还没装
+
+  Thought for 1m 4s (ctrl+o to expand)
+
+● 关键信息出现了 —— 你的 Azure 服务器还没装 Docker / 
+  Compose，是台全新机器。那这次就不只是改工作流，还得补上：
+
+  1. 生产用的 compose 文件（README 引用的 deploy/docker-compose.yml
+  其实不存在，服务器没东西可跑）
+  2. Azure 从零初始化的完整步骤（装 Docker、放配置、登录 ACR、安全组）
+
+  既然是新装，SSH 脚本里就用最新的 docker compose（V2）。
+
+  我先确认两件事再给你完整方案：后端镜像的启动方式（生产 compose 要照着写）。
+
+  Thought for 2m 39s, read 2 files (ctrl+o to expand)
+
+● 完全清楚了。后端镜像自带 alembic upgrade head && uvicorn ... --port 
+  7000（backend/Dockerfile:14），配置走 config.yml + .env 挂载（config.py 优先读
+  CONFIG_PATH）。生产 compose 照这个机制写即可。
+
+  这次范围比最初设想的大（要补一个根本不存在的生产 compose 文件 + Azure
+  从零初始化），且直接影响生产部署。我先把完整方案整理成计划给你过目，再动手。
+
+● Entered plan mode
+  Claude is now exploring and designing an implementation approach.
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ 等一等，我自己去装                                                            
+
+  Thought for 2m 33s (ctrl+o to expand)
+
+● 明白，服务器环境（Docker / Compose 引擎）你自己装，我不碰服务器操作。
+
+  那我这边就聚焦在仓库内的改动。有一个范围问题需要你定一下 ——
+  它决定我这次建不建文件。
+  ⎿  Invalid tool parameters
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ 还有一点需要引入，我之前的腾讯云服务器是引入了nginx配置的，现在azure上面还没  
+  有                                                                            
+
+  Thought for 1m 54s (ctrl+o to expand)
+
+● 已退出 plan 模式。信息齐了，我整理一下最终要做的事 —— 既然 Docker、Nginx
+  你自己在 Azure
+  上装，我就只管仓库内的文件，把服务器要用的东西都准备好让你拷过去：
+
+  1. .github/workflows/deploy.yml —— backend 推完 ACR 镜像后，新增
+  appleboy/ssh-action 步骤，SSH 到 Azure 跑 docker compose pull && up -d
+  2. deploy/docker-compose.yml（新建）—— 生产 compose，从 ACR 拉镜像，只跑
+  postgres + backend，README 一直引用它但仓库里没有
+  3. deploy/nginx-api.conf（新建）—— 把 README 里的 nginx
+  反代配置抽成文件，你装好 nginx 后直接拷
+  4. README.md —— 腾讯云→Azure、自动部署流程、新增的 GitHub Secrets 清单
+
+  先把 3 个偏独立的文件一起处理。
+
+● Write(deploy/docker-compose.yml)
+  ⎿  Wrote 42 lines to deploy/docker-compose.yml
+      1 # 生产部署 Compose —— 从阿里云 ACR 拉取后端镜像运行
+      2 #
+      3 # 放置于服务器 /opt/blog/，同目录需有 config.yml 与 .env。
+      4 # 前端已部署到 GitHub Pages，此处仅运行 postgres + backend。
+      5 #
+        ：
+      7 #   BACKEND_IMAGE=crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com/<
+        namespace>/blog-backend:latest
+      8 # 可选覆盖默认数据库账号（默认 blog:blog）：
+      9 #   POSTGRES_USER=... / POSTGRES_PASSWORD=...
+     … +34 lines (ctrl+o to expand)
+
+  Thought for 23s (ctrl+o to expand)
+
+● Write(deploy/nginx-api.conf)  ⎿  Wrote 34 lines to deploy/nginx-api.conf
+      1 # Nginx 反向代理 —— api.huanghe123123.asia → 后端容器 (127.0.0.1:
+        7000)
+      2 #
+      4 #   sudo cp deploy/nginx-api.conf /etc/nginx/sites-available/api
+      5 #   sudo ln -sf /etc/nginx/sites-available/api /etc/nginx/sites-e
+        nabled/
+      6 #   sudo nginx -t && sudo systemctl reload nginx
+      7 #
+        ：
+      9 #   sudo certbot --nginx -d api.huanghe123123.asia
+     … +28 lines (ctrl+o to expand)
+
+● Update(.github/workflows/deploy.yml)
+  ⎿  Added 15 lines, removed 1 line
+      42            cname: ${{ vars.CNAME }}
+      43  
+      44    # ===========================================================
+          ==============
+      45 -  # 后端：构建 Docker 镜像 → 推送到阿里云 ACR                  
+      45 +  # 后端：构建 Docker 镜像 → 推送到阿里云 ACR → SSH 部署到 Azur
+         +e 服务器                                                       
+      46    # ===========================================================
+          ==============
+      47    backend:
+      48      runs-on: ubuntu-latest
+     ...
+      64            tags: |
+      65              ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPA
+          CE }}/blog-backend:latest
+      66              ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPA
+          CE }}/blog-backend:${{ github.sha }}
+      67 +                                                               
+      68 +      # 镜像推送完成后，SSH 到 Azure 服务器拉取并重启容器      
+      69 +      - name: Deploy to Azure server                           
+      70 +        uses: appleboy/ssh-action@v1.2.0                       
+      71 +        with:                                                  
+      72 +          host: ${{ secrets.DEPLOY_HOST }}                     
+      73 +          username: ${{ secrets.DEPLOY_USER }}                 
+      74 +          key: ${{ secrets.DEPLOY_SSH_KEY }}                   
+      75 +          script: |                                            
+      76 +            cd /opt/blog                                       
+      77 +            echo "${{ secrets.ACR_PASSWORD }}" | docker login $
+         +{{ secrets.ACR_REGISTRY }} -u "${{ secrets.ACR_USERNAME }}" --p
+         +assword-stdin                                                  
+      78 +            docker compose pull                                
+      79 +            docker compose up -d                               
+      80 +            docker image prune -f                              
+
+  Thought for 2m 56s (ctrl+o to expand)
+
+● 三个文件就位。现在改 README，按前面梳理的几处逐块更新。先改上半部分（架构图、
+  目录结构、前置准备表、服务器初始配置）。
+
+● Update(README.md)
+  ⎿  Added 3 lines, removed 3 lines
+       7  ```
+       8  用户浏览器
+       9      ├── blog.huanghe123123.asia  ──→  GitHub Pages（前端静态资
+          源）
+      10 -    └── api.huanghe123123.asia  ──→  自建服务器 Nginx → Docker 
+         -Backend（:7000）                                               
+      10 +    └── api.huanghe123123.asia  ──→  Azure 服务器 Nginx → Docke
+         +r Backend（:7000）                                             
+      11                                           │
+      12                                           └── PostgreSQL 容器
+      13  ```
+      14  
+      15  - **前端**：构建为纯静态文件，部署到 GitHub Pages，通过 `VITE_A
+          PI_BASE_URL` 指向后端 API
+      16 -- **后端**：Docker 镜像存储在阿里云 ACR，GitHub Actions 自动构 
+         -建推送，服务器 `docker-compose pull` 拉取运行                  
+      17 -- **CI/CD**：推送 `main` 分支自动触发前端部署 + 后端镜像构建   
+      16 +- **后端**：Docker 镜像存储在阿里云 ACR，GitHub Actions 自动构 
+         +建推送，并通过 SSH 自动部署到 Azure 服务器（`docker compose pul
+         +l && up -d`）                                                  
+      17 +- **CI/CD**：推送 `main` 分支自动触发前端部署 + 后端镜像构建 + 
+         +Azure 服务器自动更新                                           
+      18  
+      19  ## 目录结构
+      20  
+
+● Update(README.md)
+  ⎿  Added 2 lines, removed 1 line
+      48  │   ├── index.html
+      49  │   └── package.json
+      50  ├── deploy/
+      51 -│   └── docker-compose.yml   # 服务器生产部署 Compose          
+      51 +│   ├── docker-compose.yml   # 服务器生产部署 Compose（从 ACR  
+         +拉镜像运行）                                                   
+      52 +│   └── nginx-api.conf       # 后端 Nginx 反向代理配置         
+      53  ├── .env                     # 密钥（gitignored，不提交）
+      54  ├── config.yml               # 站点公开配置（可提交）
+      55  ├── .github/workflows/
+
+● Update(README.md)
+  ⎿  Added 3 lines, removed 2 lines
+       92  | 项目 | 说明 |
+       93  |------|------|
+       94  | 域名 | `blog.huanghe123123.asia`（前端）、`api.huanghe123123
+           .asia`（后端） |
+       95 -| DNS | Cloudflare，`blog` CNAME → `huanghe123123.github.io`，
+          -`api` A → 服务器 IP（关代理/灰色云） |                        
+       95 +| 服务器 | Azure 虚拟机 `azureuser@40.115.208.138`（自行安装 D
+          +ocker + Compose 插件、Nginx） |                               
+       96 +| DNS | Cloudflare，`blog` CNAME → `huanghe123123.github.io`，
+          +`api` A → `40.115.208.138`（关代理/灰色云） |                 
+       97  | SSL | 服务器 Nginx + Let's Encrypt（Certbot），通配符证书 `*
+           .huanghe123123.asia` |
+       98  | 容器镜像 | 阿里云 ACR 个人版 `crpi-xxx.cn-hangzhou.personal.
+           cr.aliyuncs.com/h-blog/blog-backend` |
+       98 -| GitHub Secrets | `ACR_REGISTRY`、`ACR_NAMESPACE`、`ACR_USERN
+          -AME`、`ACR_PASSWORD` |                                        
+       99 +| GitHub Secrets | ACR：`ACR_REGISTRY`、`ACR_NAMESPACE`、`ACR_
+          +USERNAME`、`ACR_PASSWORD`；SSH 部署：`DEPLOY_HOST`、`DEPLOY_US
+          +ER`、`DEPLOY_SSH_KEY` |                                       
+      100  | GitHub Variables | `VITE_API_BASE_URL` = `https://api.huangh
+           e123123.asia/api`、`CNAME` = `blog.huanghe123123.asia` |
+      101  
+      102  ### 1. 服务器初始配置
+
+● Update(README.md)
+  ⎿  Added 6 lines, removed 3 lines
+      101  
+      102  ### 1. 服务器初始配置
+      103  
+      104 +> 前提：已在 Azure 服务器上安装好 Docker（含 Compose 插件）与 
+          +Nginx。                                                       
+      105 +                                                              
+      106  在服务器上创建部署目录并放置文件：
+      107  
+      108  ```bash
+      109  mkdir -p /opt/blog
+      110  cd /opt/blog
+      111  
+      110 -# 放入 deploy/docker-compose.yml、config.yml、.env            
+      112 +# 从仓库 deploy/ 拷入 docker-compose.yml，再放入 config.yml 与
+          + .env                                                         
+      113  # config.yml — 站点公开配置（域名、主题、开关等），无密钥，可
+           直接从仓库复制
+      112 -# .env       — 所有密钥和密码（gitignored，需手动创建），内容 
+          -如下：                                                        
+      114 +# .env       — 镜像地址 + 所有密钥（gitignored，需手动创建），
+          +内容如下：                                                    
+      115  #
+      116 +#   BACKEND_IMAGE=crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.co
+          +m/h-blog/blog-backend:latest                                  
+      117  #   DATABASE_URL=postgresql+psycopg://user:pass@postgres:5432/
+           blog
+      118  #   SECRET_KEY=<openssl rand -hex 32>
+      119  #   SMTP_USER=your@email.com
+     ...
+      123  #
+      124  #   也可追加 POSTGRES_USER / POSTGRES_PASSWORD 覆盖 docker-com
+           pose 默认值
+      125  
+      123 -# 登录 ACR                                                    
+      126 +# 登录 ACR（凭据持久化到 ~/.docker/config.json）              
+      127  docker login crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com
+      128  ```
+      129  
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ 我看你刚刚没反应了所以打断了，继续吧                                          
+
+  Thought for 51s (ctrl+o to expand)
+
+● 抱歉，上一批 4 个 Edit 其实都成功了，可能是显示延迟。我继续把 README
+  下半部分（Nginx、拉取启动、更新流程、安全组）改完。
+
+● Update(README.md)
+  ⎿  Added 5 lines, removed 29 lines
+      129  
+      130  ### 2. Nginx 反向代理
+      131  
+      132 -```nginx                                                      
+      133 -# /etc/nginx/sites-available/api                              
+      134 -server {                                                      
+      135 -    server_name api.huanghe123123.asia;                       
+      132 +反代配置已抽成文件 `deploy/nginx-api.conf`（将 `api` 域名转发 
+          +到后端容器 `127.0.0.1:7000`）。拷贝并启用：                   
+      133  
+      137 -    location / {                                              
+      138 -        proxy_pass http://127.0.0.1:7000;                     
+      139 -        proxy_set_header Host $host;                          
+      140 -        proxy_set_header X-Real-IP $remote_addr;              
+      141 -        proxy_set_header X-Forwarded-For $proxy_add_x_forwarde
+          -d_for;                                                        
+      142 -        proxy_set_header X-Forwarded-Proto $scheme;           
+      143 -    }                                                         
+      144 -                                                              
+      145 -    listen 443 ssl;                                           
+      146 -    ssl_certificate     /etc/letsencrypt/live/api.huanghe12312
+          -3.asia/fullchain.pem;                                         
+      147 -    ssl_certificate_key /etc/letsencrypt/live/api.huanghe12312
+          -3.asia/privkey.pem;                                           
+      148 -}                                                             
+      149 -                                                              
+      150 -server {                                                      
+      151 -    if ($host = api.huanghe123123.asia) {                     
+      152 -        return 301 https://$host$request_uri;                 
+      153 -    }                                                         
+      154 -    listen 80;                                                
+      155 -    server_name api.huanghe123123.asia;                       
+      156 -    return 404;                                               
+      157 -}                                                             
+      158 -```                                                           
+      159 -                                                              
+      160 -启用并重载：                                                  
+      161 -                                                              
+      134  ```bash
+      135 +sudo cp deploy/nginx-api.conf /etc/nginx/sites-available/api  
+      136  sudo ln -sf /etc/nginx/sites-available/api /etc/nginx/sites-en
+           abled/
+      137  sudo nginx -t && sudo systemctl reload nginx
+      138 +                                                              
+      139 +# 首次签发 SSL 证书（Certbot 会自动填好证书路径）             
+      140 +sudo certbot --nginx -d api.huanghe123123.asia                
+      141  ```
+      142  
+      143  ### 3. 拉取并启动
+
+● Update(README.md)
+  ⎿  Added 3 lines, removed 3 lines
+      144  
+      145  ```bash
+      146  cd /opt/blog
+      147 -docker-compose pull          # 从 ACR 拉取最新镜像            
+      148 -docker-compose up -d         # 启动 postgres + backend        
+      149 -docker-compose logs backend  # 查看日志（含 alembic 迁移）    
+      147 +docker compose pull          # 从 ACR 拉取最新镜像            
+      148 +docker compose up -d         # 启动 postgres + backend        
+      149 +docker compose logs backend  # 查看日志（含 alembic 迁移）    
+      150  ```
+      151  
+      152  ### 4. 更新流程
+
+● Update(README.md)
+  ⎿  Added 7 lines, removed 11 lines
+      149  docker compose logs backend  # 查看日志（含 alembic 迁移）
+      150  ```
+      151  
+      152 -### 4. 更新流程                                               
+      152 +### 4. 更新流程（全自动）                                     
+      153  
+      154 -推送代码到 `main` 分支后，GitHub Actions 自动：               
+      154 +推送代码到 `main` 分支后，GitHub Actions 自动完成：           
+      155  
+      156  1. **前端**：`npm ci → npm run build`（产物含 `404.html` = `in
+           dex.html` 解决 SPA 路由刷新 404），部署到 `gh-pages` 分支 → Gi
+           tHub Pages 自动生效
+      157  2. **后端**：Docker 构建并推送到 ACR
+      158 +3. **部署**：SSH 连接 Azure 服务器，自动执行 `docker compose p
+          +ull && up -d` 并清理旧镜像 —— 无需任何手动操作                
+      159  
+      159 -服务器上手动更新后端：                                        
+      160 +> 自动部署依赖 GitHub Secrets `DEPLOY_HOST` / `DEPLOY_USER` / 
+          +`DEPLOY_SSH_KEY`（见前置准备）。                              
+      161 +> 若需手动更新，仍可在服务器上执行 `cd /opt/blog && docker com
+          +pose pull && docker compose up -d`。                          
+      162 +>                                                             
+      163 +> **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `do
+          +cker-compose.yml`、`config.yml` 和 `.env`（见步骤 1），这些文 
+          +件不进 Docker 镜像，通过 volume 挂载到容器。后续更新由 CI 自动
+          +完成，配置文件无需重复操作。                                  
+      164  
+      161 -```bash                                                       
+      162 -cd /opt/blog                                                  
+      163 -docker-compose pull && docker-compose up -d                   
+      164 -docker image prune -f    # 清理旧镜像                         
+      165 -```                                                           
+      166 -                                                              
+      167 -> **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `co
+          -nfig.yml` 和 `.env`（见步骤 1），这两个文件不进 Docker 镜像， 
+          -通过 volume 挂载到容器。后续更新只需 `pull && up -d`，配置文件
+          -无需重复操作。                                                
+      168 -                                                              
+      165  ### 5. 安全组
+      166  
+      167  确保入站规则放行：TCP 80、443（Nginx）、7000（后端直连调试）。
+
+● Update(README.md)
+  ⎿  Added 2 lines, removed 2 lines
+      162  >
+      163  > **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `do
+           cker-compose.yml`、`config.yml` 和 `.env`（见步骤 1），这些文
+           件不进 Docker 镜像，通过 volume 挂载到容器。后续更新由 CI 自动
+           完成，配置文件无需重复操作。
+      164  
+      165 -### 5. 安全组                                                 
+      165 +### 5. Azure 网络安全组（NSG）                                
+      166  
+      167 -确保入站规则放行：TCP 80、443（Nginx）、7000（后端直连调试）。
+      167 +确保入站规则放行：TCP 22（SSH 自动部署）、80、443（Nginx）。70
+          +00 端口可选放行用于后端直连调试；正式环境建议只经 Nginx（443）
+          +访问，不对外暴露 7000。                                       
+      168  
+      169  ## 常见问题
+      170  
+
+  Thought for 44s (ctrl+o to expand)
+
+● 全部改完。验证一下两个 YAML 的语法、确认 README 没残留 V1 的 docker-compose
+  命令、deploy 目录就位。
+
+  Thought for 2m 20s, ran 1 shell command (ctrl+o to expand)
+
+● 全部完成，验证通过：两个 YAML 语法正确，README 无残留的 V1 命令，deploy/
+  两个文件就位。
+
+  改动汇总
+
+  1. .github/workflows/deploy.yml — backend job 在推送 ACR 镜像后新增自动部署：
+        - name: Deploy to Azure server
+          uses: appleboy/ssh-action@v1.2.0
+          with:
+            host: ${{ secrets.DEPLOY_HOST }}
+            username: ${{ secrets.DEPLOY_USER }}
+            key: ${{ secrets.DEPLOY_SSH_KEY }}
+            script: |
+              cd /opt/blog
+              echo "${{ secrets.ACR_PASSWORD }}" | docker login ${{ 
+  secrets.ACR_REGISTRY }} -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+              docker compose pull
+              docker compose up -d
+              docker image prune -f
+  host/user/key 走 Secrets，换服务器不用改工作流；脚本里重新 docker login
+  一次防凭据过期。
+
+  2. deploy/docker-compose.yml（新建）— 生产 compose，image: ${BACKEND_IMAGE} 从
+  ACR 拉取，只跑 postgres + backend，postgres 不对外暴露端口。
+
+  3. deploy/nginx-api.conf（新建）— 反代配置抽成文件，含拷贝/启用/certbot
+  命令注释。
+
+  4. README.md — 架构图与全文腾讯云/自建 → Azure；更新流程改为三步全自动；新增
+  Secrets 清单；安全组改 Azure NSG。
+
+  ---
+  你这边还需要做的
+
+  ① 加 3 个 GitHub Secrets（其余 ACR_* 已有，复用）。装了 gh 的话：
+  gh secret set DEPLOY_HOST --body "40.115.208.138"
+  gh secret set DEPLOY_USER --body "azureuser"
+  gh secret set DEPLOY_SSH_KEY < ~/.ssh/BlogHuanghe123123_key.pem   # 
+  私钥全文，含 BEGIN/END 行
+
+  ② 关键衔接点：服务器 /opt/blog/.env 里的 BACKEND_IMAGE 必须等于 CI 
+  推送的镜像地址，即 ${ACR_REGISTRY}/${ACR_NAMESPACE}/blog-backend:latest。两者
+  对不上，服务器就会拉到旧镜像或拉取失败。
+
+  ③ 服务器/网络（你装好 Docker+Nginx 后）：把 deploy/ 两个文件拷到
+  /opt/blog/；DNS 把 api A 记录指到 40.115.208.138；Azure NSG 放行 22（SSH
+  部署必需）/80/443。
+
+  ---
+  两个提醒：
+  - 若 BlogHuanghe123123_key.pem 设了密码，ssh-action 还要加一行 passphrase: ${{
+  secrets.DEPLOY_SSH_KEY_PASSPHRASE }}（Azure 默认生成的无密码，一般不用）。
+  - Azure（海外）跨境拉阿里云杭州 ACR 可能偏慢甚至偶发超时，留意首次部署日志。
+
+  需要的话我可以帮你跑 gh secret set 那几条命令（会读你的私钥文件），你说一声。
+
+✻ Crunched for 4m 5s
+
+❯ gh弄一下，第二个我用的是域名，另外nginx怎么配置                               
+  ⎿  Retrying in 0s · attempt 7/10

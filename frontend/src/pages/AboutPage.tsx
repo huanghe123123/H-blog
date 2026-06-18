@@ -19,7 +19,7 @@ export function AboutPage() {
       />
       <div className="profile-center">
         {aboutData.content && (
-          <Card style={{ borderRadius: 0 }}>
+          <Card className="content-card" style={{ borderRadius: 0 }}>
             <div data-color-mode="light">
               <MDEditor.Markdown
                 source={resolveAcfunEmoji(aboutData.content)}

@@ -30,6 +30,7 @@ export default function App() {
       primary_color: "#1f6feb",
       border_radius: 6,
       locale: "zh-CN",
+      home: { greeting_enabled: true, tagline: "" },
       features: { email_verification: true, comments: true, likes: true },
     };
     return renderApp(fallback);
@@ -55,8 +56,8 @@ function renderApp(config: SiteConfig) {
           borderRadius: config.border_radius,
           colorPrimary: "#49B1F5",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Lato, Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-          colorBgLayout: "#f0f2f5",
-          colorBgContainer: "#fafbfd",
+          colorBgLayout: "#e8ecf2",
+          colorBgContainer: "#fbfcff",
           colorBorderSecondary: "#e8eaed",
         }
       }}

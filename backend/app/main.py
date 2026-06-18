@@ -50,6 +50,10 @@ def public_config():
         "primary_color": settings.primary_color,
         "border_radius": settings.border_radius,
         "locale": settings.locale,
+        "home": {
+            "greeting_enabled": settings.home_greeting_enabled,
+            "tagline": settings.home_tagline,
+        },
         "features": {
             "email_verification": settings.email_verification_enabled,
             "comments": settings.comments_enabled,

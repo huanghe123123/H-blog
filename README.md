@@ -7,14 +7,14 @@
 ```
 用户浏览器
     ├── blog.huanghe123123.asia  ──→  GitHub Pages（前端静态资源）
-    └── api.huanghe123123.asia  ──→  自建服务器 Nginx → Docker Backend（:7000）
+    └── api.huanghe123123.asia  ──→  Azure 服务器 Nginx → Docker Backend（:7000）
                                          │
                                          └── PostgreSQL 容器
 ```
 
 - **前端**：构建为纯静态文件，部署到 GitHub Pages，通过 `VITE_API_BASE_URL` 指向后端 API
-- **后端**：Docker 镜像存储在阿里云 ACR，GitHub Actions 自动构建推送，服务器 `docker-compose pull` 拉取运行
-- **CI/CD**：推送 `main` 分支自动触发前端部署 + 后端镜像构建
+- **后端**：Docker 镜像存储在阿里云 ACR，GitHub Actions 自动构建推送，并通过 SSH 自动部署到 Azure 服务器（`docker compose pull && up -d`）
+- **CI/CD**：推送 `main` 分支自动触发前端部署 + 后端镜像构建 + Azure 服务器自动更新
 
 ## 目录结构
 
@@ -48,7 +48,8 @@
 │   ├── index.html
 │   └── package.json
 ├── deploy/
-│   └── docker-compose.yml   # 服务器生产部署 Compose
+│   ├── docker-compose.yml   # 服务器生产部署 Compose（从 ACR 拉镜像运行）
+│   └── nginx-api.conf       # 后端 Nginx 反向代理配置
 ├── .env                     # 密钥（gitignored，不提交）
 ├── config.yml               # 站点公开配置（可提交）
 ├── .github/workflows/
@@ -91,13 +92,16 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 | 项目 | 说明 |
 |------|------|
 | 域名 | `blog.huanghe123123.asia`（前端）、`api.huanghe123123.asia`（后端） |
-| DNS | Cloudflare，`blog` CNAME → `huanghe123123.github.io`，`api` A → 服务器 IP（关代理/灰色云） |
+| 服务器 | Azure 虚拟机 `azureuser@40.115.208.138`（自行安装 Docker + Compose 插件、Nginx） |
+| DNS | Cloudflare，`blog` CNAME → `huanghe123123.github.io`，`api` A → `40.115.208.138`（关代理/灰色云） |
 | SSL | 服务器 Nginx + Let's Encrypt（Certbot），通配符证书 `*.huanghe123123.asia` |
 | 容器镜像 | 阿里云 ACR 个人版 `crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com/h-blog/blog-backend` |
-| GitHub Secrets | `ACR_REGISTRY`、`ACR_NAMESPACE`、`ACR_USERNAME`、`ACR_PASSWORD` |
+| GitHub Secrets | ACR：`ACR_REGISTRY`、`ACR_NAMESPACE`、`ACR_USERNAME`、`ACR_PASSWORD`；SSH 部署：`DEPLOY_HOST`、`DEPLOY_USER`、`DEPLOY_SSH_KEY` |
 | GitHub Variables | `VITE_API_BASE_URL` = `https://api.huanghe123123.asia/api`、`CNAME` = `blog.huanghe123123.asia` |
 
 ### 1. 服务器初始配置
+
+> 前提：已在 Azure 服务器上安装好 Docker（含 Compose 插件）与 Nginx。
 
 在服务器上创建部署目录并放置文件：
 
@@ -105,10 +109,11 @@ docker compose exec backend alembic revision --autogenerate -m "说明"
 mkdir -p /opt/blog
 cd /opt/blog
 
-# 放入 deploy/docker-compose.yml、config.yml、.env
+# 从仓库 deploy/ 拷入 docker-compose.yml，再放入 config.yml 与 .env
 # config.yml — 站点公开配置（域名、主题、开关等），无密钥，可直接从仓库复制
-# .env       — 所有密钥和密码（gitignored，需手动创建），内容如下：
+# .env       — 镜像地址 + 所有密钥（gitignored，需手动创建），内容如下：
 #
+#   BACKEND_IMAGE=crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com/h-blog/blog-backend:latest
 #   DATABASE_URL=postgresql+psycopg://user:pass@postgres:5432/blog
 #   SECRET_KEY=<openssl rand -hex 32>
 #   SMTP_USER=your@email.com
@@ -118,76 +123,48 @@ cd /opt/blog
 #
 #   也可追加 POSTGRES_USER / POSTGRES_PASSWORD 覆盖 docker-compose 默认值
 
-# 登录 ACR
+# 登录 ACR（凭据持久化到 ~/.docker/config.json）
 docker login crpi-xxx.cn-hangzhou.personal.cr.aliyuncs.com
 ```
 
 ### 2. Nginx 反向代理
 
-```nginx
-# /etc/nginx/sites-available/api
-server {
-    server_name api.huanghe123123.asia;
-
-    location / {
-        proxy_pass http://127.0.0.1:7000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    listen 443 ssl;
-    ssl_certificate     /etc/letsencrypt/live/api.huanghe123123.asia/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/api.huanghe123123.asia/privkey.pem;
-}
-
-server {
-    if ($host = api.huanghe123123.asia) {
-        return 301 https://$host$request_uri;
-    }
-    listen 80;
-    server_name api.huanghe123123.asia;
-    return 404;
-}
-```
-
-启用并重载：
+反代配置已抽成文件 `deploy/nginx-api.conf`（将 `api` 域名转发到后端容器 `127.0.0.1:7000`）。拷贝并启用：
 
 ```bash
+sudo cp deploy/nginx-api.conf /etc/nginx/sites-available/api
 sudo ln -sf /etc/nginx/sites-available/api /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+
+# 首次签发 SSL 证书（Certbot 会自动填好证书路径）
+sudo certbot --nginx -d api.huanghe123123.asia
 ```
 
 ### 3. 拉取并启动
 
 ```bash
 cd /opt/blog
-docker-compose pull          # 从 ACR 拉取最新镜像
-docker-compose up -d         # 启动 postgres + backend
-docker-compose logs backend  # 查看日志（含 alembic 迁移）
+docker compose pull          # 从 ACR 拉取最新镜像
+docker compose up -d         # 启动 postgres + backend
+docker compose logs backend  # 查看日志（含 alembic 迁移）
 ```
 
-### 4. 更新流程
+### 4. 更新流程（全自动）
 
-推送代码到 `main` 分支后，GitHub Actions 自动：
+推送代码到 `main` 分支后，GitHub Actions 自动完成：
 
 1. **前端**：`npm ci → npm run build`（产物含 `404.html` = `index.html` 解决 SPA 路由刷新 404），部署到 `gh-pages` 分支 → GitHub Pages 自动生效
 2. **后端**：Docker 构建并推送到 ACR
+3. **部署**：SSH 连接 Azure 服务器，自动执行 `docker compose pull && up -d` 并清理旧镜像 —— 无需任何手动操作
 
-服务器上手动更新后端：
+> 自动部署依赖 GitHub Secrets `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（见前置准备）。
+> 若需手动更新，仍可在服务器上执行 `cd /opt/blog && docker compose pull && docker compose up -d`。
+>
+> **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `docker-compose.yml`、`config.yml` 和 `.env`（见步骤 1），这些文件不进 Docker 镜像，通过 volume 挂载到容器。后续更新由 CI 自动完成，配置文件无需重复操作。
 
-```bash
-cd /opt/blog
-docker-compose pull && docker-compose up -d
-docker image prune -f    # 清理旧镜像
-```
+### 5. Azure 网络安全组（NSG）
 
-> **注意**：首次部署前，需要先在服务器 `/opt/blog/` 下放好 `config.yml` 和 `.env`（见步骤 1），这两个文件不进 Docker 镜像，通过 volume 挂载到容器。后续更新只需 `pull && up -d`，配置文件无需重复操作。
-
-### 5. 安全组
-
-确保入站规则放行：TCP 80、443（Nginx）、7000（后端直连调试）。
+确保入站规则放行：TCP 22（SSH 自动部署）、80、443（Nginx）。7000 端口可选放行用于后端直连调试；正式环境建议只经 Nginx（443）访问，不对外暴露 7000。
 
 ## 常见问题
 
