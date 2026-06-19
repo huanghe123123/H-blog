@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: huanghe123123
+      POSTGRES_PASSWORD: 1234567890yyt
+      POSTGRES_DB: blog
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U huanghe123123 -d blog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: crpi-229rp7edzl68uqii.cn-hangzhou.personal.cr.aliyuncs.com/h-blog/blog-backend:latest
+    environment:
+      CONFIG_PATH: /app/config.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./config.yml:/app/config.yml
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

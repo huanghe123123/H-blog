@@ -10,3 +10,4 @@ build/
 *.tsbuildinfo
 .DS_Store
 postgres_data/
+./conf

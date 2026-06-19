@@ -50,15 +50,12 @@
 ├── deploy/
 │   ├── docker-compose.yml   # 服务器生产部署 Compose（从 ACR 拉镜像运行）
 │   └── nginx-api.conf       # 后端 Nginx 反向代理配置
+├── docker-compose.yml       # 本地开发 Compose
 ├── .env                     # 密钥（gitignored，不提交）
+├── .env.example             # 密钥与部署变量模板（可提交）
 ├── config.yml               # 站点公开配置（可提交）
 ├── .github/workflows/
 │   └── deploy.yml           # CI/CD 工作流
-├── deploy/
-│   └── docker-compose.yml   # 服务器部署 Compose（拉镜像，非构建）
-├── docker-compose.yml       # 本地开发 Compose
-├── .env.example             # 环境变量模板（可提交）
-├── config.yml               # 站点公开配置
 ```
 
 ## 本地开发
