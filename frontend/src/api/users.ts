@@ -20,3 +20,8 @@ export async function updateMe(payload: Partial<Pick<User, "nickname" | "avatar_
   const { data } = await api.put<User>("/users/me", payload);
   return data;
 }
+
+export async function updatePassword(newPassword: string) {
+  const { data } = await api.put<User>("/users/me/password", { new_password: newPassword });
+  return data;
+}

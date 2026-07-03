@@ -11,7 +11,6 @@ site:
   name_color: "#1f2d3d"
   description: "这是huanghe123123~~采用vibe coding方法~~制作的基于react和fastapi的博客网站"
   description_color: "#87cefa"
-  owner: 1
 
 # ---------------------------------------------------------------------------
 # 服务端口

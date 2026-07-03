@@ -66,7 +66,9 @@ def _refresh_token_if_expired(db: Session, user: User) -> User:
 
 
 def authenticate_user(db: Session, identifier: str, password: str) -> User | None:
-    user = db.scalar(select(User).where(or_(User.username == identifier, User.email == identifier)))
+    user = db.scalars(
+        select(User).where(or_(User.username == identifier, User.email == identifier, User.nickname == identifier))
+    ).first()
     if not user or not verify_password(password, user.hashed_password):
         return None
     if get_settings().email_verification_enabled and not user.is_verified:
@@ -130,6 +132,14 @@ def list_users(db: Session, skip: int = 0, limit: int = 50) -> list[User]:
 
 def set_user_role(db: Session, user: User, role: str) -> User:
     user.role = role
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_password(db: Session, user: User, new_password: str) -> User:
+    user.hashed_password = get_password_hash(new_password)
     db.add(user)
     db.commit()
     db.refresh(user)

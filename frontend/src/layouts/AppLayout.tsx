@@ -1,8 +1,9 @@
-import { Avatar, Button, Layout, Modal, Space, Typography } from "antd";
+import { Avatar, Button, Form, Input, Layout, Modal, Space, Typography, message } from "antd";
 import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
+import { updatePassword } from "../api/users";
 import { aboutData } from "../data/about";
 import { useAuth } from "../hooks/useAuth";
 import { PostListPage } from "../pages/PostListPage";
@@ -15,6 +16,9 @@ export function AppLayout() {
   const location = useLocation();
   const [siteName, setSiteName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [setupPasswordOpen, setSetupPasswordOpen] = useState(false);
+  const [setupPasswordSubmitting, setSetupPasswordSubmitting] = useState(false);
+  const [setupPasswordForm] = Form.useForm();
   const fabRef = useRef<HTMLButtonElement>(null);
   const dragRef = useRef({ active: false, startX: 0, startY: 0, posX: 0, posY: 0, moved: false });
 
@@ -27,6 +31,14 @@ export function AppLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(location.search);
+    if (params.has("setup_password") && user) {
+      setSetupPasswordOpen(true);
+    }
+  }, [loading, location.search, user]);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.has("keyword") && location.pathname !== "/posts/search") {
       const keyword = params.get("keyword") || "";
@@ -37,6 +49,25 @@ export function AppLayout() {
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/" || location.pathname === "/index";
     return location.pathname.startsWith(path);
+  };
+
+  const onSetupPassword = async (values: { password: string; confirm: string }) => {
+    if (values.password !== values.confirm) {
+      message.error("两次输入的密码不一致");
+      return;
+    }
+    setSetupPasswordSubmitting(true);
+    try {
+      await updatePassword(values.password);
+      message.success("密码设置成功");
+      setSetupPasswordOpen(false);
+      setupPasswordForm.resetFields();
+      navigate(location.pathname, { replace: true });
+    } catch {
+      message.error("密码设置失败，请稍后重试");
+    } finally {
+      setSetupPasswordSubmitting(false);
+    }
   };
 
   const onFabPointerDown = useCallback((e: React.PointerEvent) => {
@@ -137,6 +168,29 @@ export function AppLayout() {
       </Footer>
       <Modal open={searchOpen} onCancel={() => setSearchOpen(false)} footer={null} width="90vw" style={{ top: 24 }}>
         <PostListPage showCreateButton={false} syncUrl={false} />
+      </Modal>
+      <Modal
+        open={setupPasswordOpen}
+        title="设置登录密码"
+        closable={false}
+        maskClosable={false}
+        footer={null}
+        width={400}
+      >
+        <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
+          你的账号通过 GitHub 授权创建，请设置一个密码，之后即可用邮箱+密码登录。
+        </Typography.Paragraph>
+        <Form form={setupPasswordForm} layout="vertical" onFinish={onSetupPassword}>
+          <Form.Item name="password" label="密码" rules={[{ required: true, min: 8, max: 128, message: "密码至少 8 位" }]}>
+            <Input.Password placeholder="至少 8 位" />
+          </Form.Item>
+          <Form.Item name="confirm" label="确认密码" rules={[{ required: true }, { validator: (_, value) => value === setupPasswordForm.getFieldValue("password") ? Promise.resolve() : Promise.reject("两次输入的密码不一致") }]}>
+            <Input.Password placeholder="再次输入密码" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block loading={setupPasswordSubmitting}>
+            设置密码
+          </Button>
+        </Form>
       </Modal>
       {user && (
         <Button

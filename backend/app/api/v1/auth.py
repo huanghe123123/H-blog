@@ -72,13 +72,16 @@ def github_callback(
     github_user = get_github_user(access_token)
     if not github_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="获取 GitHub 用户信息失败")
-    user = get_or_create_github_user(db, github_user)
+    user, is_new = get_or_create_github_user(db, github_user)
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="用户已被停用")
     user_id = str(user.id)
     access_token = create_access_token(user_id)
     refresh_token = create_refresh_token(user_id)
-    response = RedirectResponse(get_settings().frontend_url, status_code=status.HTTP_302_FOUND)
+    redirect_url = get_settings().frontend_url
+    if is_new:
+        redirect_url = f"{redirect_url}?setup_password=1"
+    response = RedirectResponse(redirect_url, status_code=status.HTTP_302_FOUND)
     set_auth_cookies(response, access_token, refresh_token)
     response.delete_cookie("github_oauth_state", path=get_settings().api_prefix + "/auth/github/callback")
     return response

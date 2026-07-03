@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { createProfileComment, deleteProfileComment, listProfileComments } from "../api/comments";
 import { listPosts } from "../api/posts";
-import { getUserProfile, updateMe } from "../api/users";
+import { getUserProfile, updateMe, updatePassword } from "../api/users";
 import { BioEditor } from "../components/BioEditor";
 import { CommentEditor } from "../components/CommentEditor";
 import { LikeButton } from "../components/LikeButton";
@@ -69,6 +69,8 @@ export function UserProfilePage() {
   const [editLinks, setEditLinks] = useState<UserLink[]>([]);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [editingLinkIdx, setEditingLinkIdx] = useState<number | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const userId = Number(id);
   const isOwn = me?.id === userId;
 
@@ -155,9 +157,22 @@ export function UserProfilePage() {
     }
     payload.links = editLinks.length > 0 ? editLinks : null;
     await updateMe(payload as Record<string, string>);
+
+    if (newPassword) {
+      if (newPassword !== confirmPassword) {
+        message.error("两次输入的密码不一致");
+        return;
+      }
+      await updatePassword(newPassword);
+      setNewPassword("");
+      setConfirmPassword("");
+      message.success("资料和密码已更新");
+    } else {
+      message.success("资料已更新");
+    }
+
     await refresh();
     setEditing(false);
-    message.success("资料已更新");
   };
 
   const yearGroups = useMemo(() => groupByYear(posts), [posts]);
@@ -214,6 +229,25 @@ export function UserProfilePage() {
               添加个人链接
             </Button>
           </div>
+          <Typography.Title level={5} style={{ marginBottom: 12 }}>修改密码</Typography.Title>
+          <Form.Item label="新密码">
+            <Input.Password
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="留空则不修改密码"
+              minLength={8}
+              maxLength={128}
+            />
+          </Form.Item>
+          <Form.Item label="确认新密码">
+            <Input.Password
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="再次输入新密码"
+              minLength={8}
+              maxLength={128}
+            />
+          </Form.Item>
           <Space>
             <Button type="primary" htmlType="submit">保存资料</Button>
             <Button onClick={() => setEditing(false)}>取消</Button>

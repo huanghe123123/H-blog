@@ -64,13 +64,14 @@ def get_github_user(access_token: str) -> dict | None:
     }
 
 
-def get_or_create_github_user(db: Session, github_user: dict) -> User:
+def get_or_create_github_user(db: Session, github_user: dict) -> tuple[User, bool]:
+    """Returns (user, is_new) — is_new is True when a brand new user was created."""
     github_id = github_user["id"]
     email = github_user.get("email")
 
     user = db.scalar(select(User).where(User.github_id == github_id))
     if user:
-        return user
+        return user, False
 
     if email:
         user = db.scalar(select(User).where(User.email == email))
@@ -80,7 +81,7 @@ def get_or_create_github_user(db: Session, github_user: dict) -> User:
                 user.avatar_url = github_user["avatar_url"]
             db.commit()
             db.refresh(user)
-            return user
+            return user, False
 
     # Create new user
     username = _unique_username(db, github_user["login"])
@@ -96,7 +97,7 @@ def get_or_create_github_user(db: Session, github_user: dict) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    return user, True
 
 
 def _unique_username(db: Session, base: str) -> str:

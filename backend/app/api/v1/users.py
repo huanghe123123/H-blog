@@ -7,9 +7,9 @@ from app.core.config import get_settings
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.comment import CommentCreate, CommentPublic
-from app.schemas.user import UserProfile, UserPublic, UserUpdate
+from app.schemas.user import PasswordUpdate, UserProfile, UserPublic, UserUpdate
 from app.services.comments import create_comment, delete_comment, get_comment_or_404, list_comments
-from app.services.users import get_user_or_404, update_user
+from app.services.users import get_user_or_404, update_password, update_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -22,6 +22,11 @@ def read_me(current_user: User = Depends(get_current_user)):
 @router.put("/me", response_model=UserPublic)
 def update_me(payload: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return update_user(db, current_user, payload)
+
+
+@router.put("/me/password", response_model=UserPublic)
+def update_my_password(payload: PasswordUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return update_password(db, current_user, payload.new_password)
 
 
 @router.get("/owner", response_model=UserProfile)

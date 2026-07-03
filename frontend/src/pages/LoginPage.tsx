@@ -76,7 +76,7 @@ export function LoginPage() {
               label: "登录",
               children: (
                 <Form layout="vertical" onFinish={onLogin}>
-                  <Form.Item name="identifier" label="用户名或邮箱" rules={[{ required: true }]}>
+                  <Form.Item name="identifier" label="用户名 / 昵称 / 邮箱" rules={[{ required: true }]}>
                     <Input />
                   </Form.Item>
                   <Form.Item name="password" label="密码" rules={[{ required: true, min: 8 }]}>
