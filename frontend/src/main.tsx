@@ -38,7 +38,8 @@ const oml2d = loadOml2d({
     },
   },
   menus: {
-    items: [
+    items: (defaultItems) => [
+      ...defaultItems,
       {
         id: "ai-chat",
         icon: "💬",
