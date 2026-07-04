@@ -13,3 +13,4 @@ postgres_data/
 conf/
 history1.txt
 deploy/.env
+*-backendmanagepyapi.txt
