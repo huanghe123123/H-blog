@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -17,21 +18,61 @@ def _token_expiry() -> datetime:
 
 
 def create_user(db: Session, payload: UserRegister) -> User:
-    existing = db.scalar(
-        select(User).where(or_(User.username == payload.username, User.email == payload.email))
-    )
+    """Create a new user with clear error messages for every conflict scenario.
 
-    if existing:
-        if existing.is_verified:
-            field = "username" if existing.username == payload.username else "email"
-            value = existing.username if field == "username" else existing.email
+    Checks username and email independently so the frontend can highlight
+    both fields when they conflict with different existing accounts.
+    """
+    # ── Format validation (returns 422 like Pydantic, but with Chinese messages) ──
+    if not re.match(r"^[a-zA-Z0-9_]+$", payload.username):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=[{"loc": ["body", "username"], "msg": "用户名只能包含英文字母、数字和下划线", "type": "value_error"}],
+        )
+
+    existing_username = db.scalar(select(User).where(User.username == payload.username))
+    existing_email = db.scalar(select(User).where(User.email == payload.email))
+
+    # ── Same unverified account (both username and email match one user) ──
+    if existing_username and existing_email and existing_username.id == existing_email.id:
+        user = existing_username
+        if user.is_verified:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail={"field": field, "message": f"{value} 已被使用"},
+                detail={"fields": [
+                    {"field": "username", "message": f"用户名 {payload.username} 已被注册"},
+                    {"field": "email", "message": f"邮箱 {payload.email} 已被注册"},
+                ]},
             )
-        return _refresh_token_if_expired(db, existing)
+        # Unverified: refresh the token and tell the user
+        _refresh_token_if_expired(db, user)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"field": "email", "message": f"邮箱 {payload.email} 已注册但未验证，验证邮件已重新发送，请检查邮箱"},
+        )
 
-    # Brand new user
+    # ── Build per-field errors ──
+    field_errors: list[dict] = []
+
+    if existing_username:
+        if existing_username.is_verified:
+            field_errors.append({"field": "username", "message": f"用户名 {payload.username} 已被注册"})
+        else:
+            field_errors.append({"field": "username", "message": f"用户名 {payload.username} 已被注册但未验证，请检查邮箱或重新发送验证邮件"})
+
+    if existing_email:
+        if existing_email.is_verified:
+            field_errors.append({"field": "email", "message": f"邮箱 {payload.email} 已被注册"})
+        else:
+            field_errors.append({"field": "email", "message": f"邮箱 {payload.email} 已被注册但未验证，请检查邮箱或重新发送验证邮件"})
+
+    if field_errors:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"fields": field_errors},
+        )
+
+    # ── Brand new user ──
     token = uuid.uuid4().hex
     user = User(
         username=payload.username,

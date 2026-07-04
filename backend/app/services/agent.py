@@ -365,14 +365,34 @@ def execute_tool(name: str, args_json: str, db: Session, user: User) -> str:
     return f"未知工具：{name}"
 
 
-def run_agent(db: Session, user: User, message: str, context: dict | None) -> AgentResponse:
+def _sanitize_history(history: list | None, max_messages: int = 20) -> list[dict]:
+    """Sanitize and truncate conversation history from the client.
+
+    Drops any role other than 'user' or 'assistant' (prevents injected tool calls),
+    caps each content to 2000 chars, and keeps only the most recent entries.
+    """
+    if not history:
+        return []
+    cleaned: list[dict] = []
+    for msg in history:
+        role = getattr(msg, "role", "") if hasattr(msg, "role") else msg.get("role", "")
+        content = getattr(msg, "content", "") if hasattr(msg, "content") else msg.get("content", "")
+        if role in ("user", "assistant"):
+            cleaned.append({"role": role, "content": str(content)[:2000]})
+    return cleaned[-max_messages:]
+
+
+def run_agent(db: Session, user: User, message: str, context: dict | None,
+              history: list | None = None) -> AgentResponse:
     """Run the LLM tool-calling loop and return the final reply."""
     settings = get_settings()
     tools = get_tools_for_role(user.role)
     system_prompt = _build_system_prompt(db, user, context)
 
+    sanitized = _sanitize_history(history)
     messages: list[dict] = [
         {"role": "system", "content": system_prompt},
+        *sanitized,
         {"role": "user", "content": message},
     ]
 

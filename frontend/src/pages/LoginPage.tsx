@@ -41,6 +41,7 @@ export function LoginPage() {
     registerForm.setFields([
       { name: "username", errors: [] },
       { name: "email", errors: [] },
+      { name: "password", errors: [] },
     ]);
     try {
       await register(values);
@@ -49,15 +50,46 @@ export function LoginPage() {
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 409) {
           const detail = err.response.data?.detail;
-          if (detail?.field) {
+          // Multi-field errors: { fields: [{field, message}, ...] }
+          if (detail?.fields && Array.isArray(detail.fields)) {
+            registerForm.setFields(
+              detail.fields.map((e: { field: string; message: string }) => ({
+                name: e.field,
+                errors: [e.message],
+              }))
+            );
+          // Single-field error (legacy): { field, message }
+          } else if (detail?.field) {
             registerForm.setFields([
               { name: detail.field, errors: [detail.message] },
             ]);
+          } else if (detail?.message) {
+            message.error(detail.message);
+          } else if (typeof detail === "string") {
+            message.error(detail);
+          }
+        } else if (err.response?.status === 422) {
+          // Pydantic validation errors
+          const detail = err.response.data?.detail;
+          if (Array.isArray(detail)) {
+            const fieldErrors = detail
+              .filter((e: { loc: string[]; msg: string }) => e.loc.length >= 2)
+              .map((e: { loc: string[]; msg: string }) => ({
+                name: e.loc[e.loc.length - 1],
+                errors: [e.msg],
+              }));
+            if (fieldErrors.length > 0) {
+              registerForm.setFields(fieldErrors);
+            } else {
+              message.error("请求数据格式有误，请检查输入");
+            }
+          } else {
+            message.error("请求数据格式有误，请检查输入");
           }
         } else if (err.response?.status === 429) {
           message.error(err.response.data?.detail || "请求过于频繁，请稍后再试");
         } else {
-          message.error("注册失败，请稍后重试");
+          message.error(err.response.data?.detail || "注册失败，请稍后重试");
         }
       } else {
         message.error("注册失败，请稍后重试");

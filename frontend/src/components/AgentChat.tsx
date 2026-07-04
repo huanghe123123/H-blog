@@ -1,11 +1,32 @@
 import { Button, Card, Input, Space, Spin, Typography } from "antd";
 import { SendOutlined, CloseOutlined } from "@ant-design/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
+import MDEditor from "@uiw/react-md-editor";
 import { api } from "../api/client";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+const STORAGE_KEY = "agent_chat_history";
+
+function loadHistory(): Message[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (m: unknown): m is Message =>
+        typeof m === "object" && m !== null &&
+        typeof (m as Message).role === "string" &&
+        ((m as Message).role === "user" || (m as Message).role === "assistant") &&
+        typeof (m as Message).content === "string"
+    );
+  } catch {
+    return [];
+  }
 }
 
 function getOml2d() {
@@ -21,7 +42,7 @@ function showTip(msg: string) {
 
 export function AgentChat({ context }: { context?: Record<string, unknown> }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -33,6 +54,15 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
     window.addEventListener("toggle-agent-chat", handler);
     return () => window.removeEventListener("toggle-agent-chat", handler);
   }, []);
+
+  // Persist messages to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch {
+      // localStorage unavailable or quota exceeded — silently ignore
+    }
+  }, [messages]);
 
   // Drag: start on title bar pointerdown
   const onTitlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -72,7 +102,7 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
     setLoading(true);
     showTip("让我想想...");
     try {
-      const { data } = await api.post("/agent", { message: text, context });
+      const { data } = await api.post("/agent", { message: text, context, history: messages });
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       showTip("完成啦~");
     } catch (err: unknown) {
@@ -131,7 +161,16 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
           </Space>
         </div>
       }
-      extra={<Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)} />}
+      extra={
+        <Space size={4}>
+          {messages.length > 0 && (
+            <Button type="text" size="small" danger onClick={() => { setMessages([]); try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ } }}>
+              结束对话
+            </Button>
+          )}
+          <Button type="text" icon={<CloseOutlined />} onClick={() => setOpen(false)} />
+        </Space>
+      }
       style={panelStyle}
       bodyStyle={{ padding: 12, display: "flex", flexDirection: "column", maxHeight: "calc(70vh - 57px)" }}
       onPointerMove={onPointerMove}
@@ -160,21 +199,37 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
               textAlign: m.role === "user" ? "right" : "left",
             }}
           >
-            <div
-              style={{
-                display: "inline-block",
-                maxWidth: "90%",
-                padding: "8px 12px",
-                borderRadius: 8,
-                background: m.role === "user" ? "#49B1F5" : "var(--bg)",
-                color: m.role === "user" ? "#fff" : "var(--text)",
-                fontSize: 14,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {m.content}
-            </div>
+            {m.role === "user" ? (
+              <div
+                style={{
+                  display: "inline-block",
+                  maxWidth: "90%",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  background: "#49B1F5",
+                  color: "#fff",
+                  fontSize: 14,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {m.content}
+              </div>
+            ) : (
+              <div
+                data-color-mode="light"
+                style={{
+                  display: "inline-block",
+                  maxWidth: "90%",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  background: "var(--bg)",
+                  fontSize: 14,
+                }}
+              >
+                <MDEditor.Markdown source={m.content} />
+              </div>
+            )}
           </div>
         ))}
         {loading && (

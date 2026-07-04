@@ -28,4 +28,4 @@ def agent_chat(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="LLM API Key 未配置",
         )
-    return run_agent(db, current_user, payload.message, payload.context)
+    return run_agent(db, current_user, payload.message, payload.context, payload.history)
