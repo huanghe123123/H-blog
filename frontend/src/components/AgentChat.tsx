@@ -1,5 +1,5 @@
 import { Button, Card, Input, Space, Spin, Typography } from "antd";
-import { MessageOutlined, SendOutlined, CloseOutlined } from "@ant-design/icons";
+import { SendOutlined, CloseOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 
@@ -62,30 +62,10 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
     }
   };
 
+  if (!open) return null;
+
   return (
     <>
-      {/* FAB button */}
-      {!open && (
-        <Button
-          type="primary"
-          shape="circle"
-          size="large"
-          icon={<MessageOutlined />}
-          onClick={() => setOpen(true)}
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 100,
-            zIndex: 1000,
-            width: 48,
-            height: 48,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          }}
-        />
-      )}
-
-      {/* Chat panel */}
-      {open && (
         <Card
           title={
             <Space>
@@ -168,7 +148,6 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
             <Button type="primary" icon={<SendOutlined />} onClick={send} loading={loading} />
           </Space.Compact>
         </Card>
-      )}
     </>
   );
 }
