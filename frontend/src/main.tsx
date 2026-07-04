@@ -7,30 +7,6 @@ import "./styles.css";
 import App from "./App";
 import { loadOml2d } from "oh-my-live2d";
 
-// Inject custom AI chat icon into oh-my-live2d's SVG sprite
-(function injectChatIcon() {
-  const svgNS = "http://www.w3.org/2000/svg";
-  const symbol = document.createElementNS(svgNS, "symbol");
-  symbol.setAttribute("id", "icon-ai-chat");
-  symbol.setAttribute("viewBox", "0 0 1024 1024");
-  symbol.innerHTML =
-    '<path d="M896 128H128c-35.2 0-64 28.8-64 64v512c0 35.2 28.8 64 64 64h256v128l128-128h384c35.2 0 64-28.8 64-64V192c0-35.2-28.8-64-64-64zM256 384h512v64H256v-64zm0 128h384v64H256v-64z"/>';
-  // Wait for oml2d's SVG sprite to be injected, then append our icon
-  const observer = new MutationObserver(() => {
-    const svg = document.querySelector("svg[aria-hidden='true']");
-    if (svg && !svg.querySelector("#icon-ai-chat")) {
-      svg.appendChild(symbol.cloneNode(true));
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-  // Fallback: try to inject immediately if SVG already exists
-  const existing = document.querySelector("svg[aria-hidden='true']");
-  if (existing && !existing.querySelector("#icon-ai-chat")) {
-    existing.appendChild(symbol);
-  }
-})();
-
 const oml2d = loadOml2d({
   primaryColor: "#49B1F5",
   stageStyle: {
