@@ -11,6 +11,8 @@ build/
 .DS_Store
 postgres_data/
 conf/
-history1.txt
 deploy/.env
+openapi.json
+vite.config.js
+vite.config.d.ts
 *-backendmanagepyapi.txt
