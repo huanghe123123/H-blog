@@ -7,6 +7,17 @@ import "./styles.css";
 import App from "./App";
 import { loadOml2d } from "oh-my-live2d";
 
+// Inject custom SVG icon sprite for the AI chat menu item.
+// Must be in the DOM before loadOml2d so <use href="#icon-ai-chat"> resolves.
+const iconSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+iconSvg.setAttribute("aria-hidden", "true");
+iconSvg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+iconSvg.innerHTML =
+  '<symbol id="icon-ai-chat" viewBox="0 0 1024 1024">' +
+  '<path fill="#49B1F5" d="M896 128H128c-35.2 0-64 28.8-64 64v512c0 35.2 28.8 64 64 64h256v128l128-128h384c35.2 0 64-28.8 64-64V192c0-35.2-28.8-64-64-64zM256 384h512v64H256v-64zm0 128h384v64H256v-64z"/>' +
+  "</symbol>";
+document.body.prepend(iconSvg);
+
 const oml2d = loadOml2d({
   primaryColor: "#49B1F5",
   stageStyle: {

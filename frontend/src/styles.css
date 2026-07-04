@@ -1217,14 +1217,3 @@ body {
   }
 }
 
-/* Live2D AI 对话菜单图标 — 替换空白 SVG 为可见元素 */
-.oml2d-menus-item[data-name="ai-chat"] .oml2d-icon {
-  display: none;
-}
-.oml2d-menus-item[data-name="ai-chat"]::before {
-  content: "💬";
-  font-size: 18px;
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-}
