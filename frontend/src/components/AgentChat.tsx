@@ -1,11 +1,23 @@
 import { Button, Card, Input, Space, Spin, Typography } from "antd";
 import { MessageOutlined, SendOutlined, CloseOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+// Helper to access oml2d instance exposed by main.tsx
+function getOml2d() {
+  return (window as unknown as Record<string, { tipsMessage?: (msg: string, duration: number, priority: number) => void }>).__oml2d;
+}
+
+function showTip(msg: string) {
+  const oml2d = getOml2d();
+  if (oml2d?.tipsMessage) {
+    oml2d.tipsMessage(msg, 3000, 1);
+  }
 }
 
 export function AgentChat({ context }: { context?: Record<string, unknown> }) {
@@ -14,6 +26,13 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Listen for toggle event from oml2d menu
+  useEffect(() => {
+    const handler = () => setOpen((prev) => !prev);
+    window.addEventListener("toggle-agent-chat", handler);
+    return () => window.removeEventListener("toggle-agent-chat", handler);
+  }, []);
+
   const send = async () => {
     const text = input.trim();
     if (!text) return;
@@ -21,9 +40,11 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
+    showTip("让我想想...");
     try {
       const { data } = await api.post("/agent", { message: text, context });
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      showTip("完成啦~");
     } catch (err: unknown) {
       let detail = "AI 服务暂时不可用";
       const e = err as { code?: string; response?: { data?: { detail?: string }; status?: number } };
@@ -35,6 +56,7 @@ export function AgentChat({ context }: { context?: Record<string, unknown> }) {
         detail = "请先登录";
       }
       setMessages((prev) => [...prev, { role: "assistant", content: `❌ ${detail}` }]);
+      showTip("唔...出错了");
     } finally {
       setLoading(false);
     }

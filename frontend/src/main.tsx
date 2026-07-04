@@ -7,22 +7,20 @@ import "./styles.css";
 import App from "./App";
 import { loadOml2d } from "oh-my-live2d";
 
-loadOml2d({
-  dockedPosition: "left",
+const oml2d = loadOml2d({
   primaryColor: "#49B1F5",
   stageStyle: {
-    bottom: "56px",
-    width: 360,
-    height: 220,
-    // 「美水かがみ劇場」葡萄藤画框：铺满舞台，看板娘在框内"演出"
-    background: "url(/live2d/stage-frame.png) center/100% 100% no-repeat",
-    boxShadow: "0 10px 30px -10px rgba(16, 24, 40, 0.22)",
+    bottom: "-50px",
+    right: "100px",
+    width: 320,
+    height: 480,
   },
   models: [
     {
-      path: "/live2d/konata/泉此方.model3.json",
-      scale: 0.13,
-      position: [0, 0],
+      path: "/live2d/xiaoyue/xiaoyue.model3.json",
+      scale: 0.06,
+      position: [0, 100],
+      stageStyle: { left: "200px" },
     },
   ],
   tips: {
@@ -39,8 +37,23 @@ loadOml2d({
       },
     },
   },
+  menus: {
+    items: [
+      {
+        id: "ai-chat",
+        icon: "💬",
+        title: "AI 对话",
+        onClick: () => {
+          window.dispatchEvent(new CustomEvent("toggle-agent-chat"));
+        },
+      },
+    ],
+  },
   mobileDisplay: false,
 });
+
+// Expose oml2d instance globally for AgentChat component
+(window as unknown as Record<string, unknown>).__oml2d = oml2d;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
