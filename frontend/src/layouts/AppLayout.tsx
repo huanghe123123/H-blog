@@ -1,9 +1,10 @@
 import { Avatar, Button, Form, Input, Layout, Modal, Space, Typography, message } from "antd";
 import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
 import { updatePassword } from "../api/users";
+import { AgentChat } from "../components/AgentChat";
 import { aboutData } from "../data/about";
 import { useAuth } from "../hooks/useAuth";
 import { PostListPage } from "../pages/PostListPage";
@@ -50,6 +51,17 @@ export function AppLayout() {
     if (path === "/") return location.pathname === "/" || location.pathname === "/index";
     return location.pathname.startsWith(path);
   };
+
+  const agentContext = useMemo(() => {
+    const path = location.pathname;
+    const match = path.match(/^\/posts\/(\d+)/);
+    if (match) return { page: "post_detail", post_id: Number(match[1]) };
+    const userMatch = path.match(/^\/users\/(\d+)/);
+    if (userMatch) return { page: "user_profile", user_id: Number(userMatch[1]) };
+    if (path === "/" || path === "/index") return { page: "home" };
+    if (path.startsWith("/categories") || path.startsWith("/posts/search")) return { page: "post_list" };
+    return { page: "unknown" };
+  }, [location.pathname]);
 
   const onSetupPassword = async (values: { password: string; confirm: string }) => {
     if (values.password !== values.confirm) {
@@ -202,6 +214,7 @@ export function AppLayout() {
           style={{ width: 56, height: 56 }}
         />
       )}
+      {user && <AgentChat context={agentContext} />}
     </Layout>
   );
 }

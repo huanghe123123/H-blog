@@ -6,8 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchSiteConfig } from "../api/config";
 import { listPosts } from "../api/posts";
 import { getSiteOwner } from "../api/users";
-import { useAuth } from "../hooks/useAuth";
-import { AgentChat } from "../components/AgentChat";
 import { PostCard } from "../components/PostCard";
 import { ProfileSideCard } from "../components/ProfileSideCard";
 import type { Post, UserProfile } from "../types";
@@ -37,7 +35,6 @@ function greeting(hour: number): string {
 }
 
 export function HomePage() {
-  const { user } = useAuth();
   const [owner, setOwner] = useState<UserProfile | null>(null);
   const [siteName, setSiteName] = useState("");
   const [siteDesc, setSiteDesc] = useState("");
@@ -138,7 +135,6 @@ export function HomePage() {
           </Card>
         </div>
       )}
-      {user && <AgentChat context={{ page: "home" }} />}
     </div>
   );
 }
