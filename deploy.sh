@@ -19,8 +19,8 @@ BRANCH="$(git branch --show-current)"
 
 # ── 同步配置文件 ────────────────────────────────────────────────────
 echo ">>> 同步配置文件到 $DEPLOY_HOST ..."
-scp -i "$SSH_KEY" conf/config.yml  "${DEPLOY_USER}@${DEPLOY_HOST}:${TARGET_DIR}/config.yml"
-scp -i "$SSH_KEY" conf/docker-compose.yml "${DEPLOY_USER}@${DEPLOY_HOST}:${TARGET_DIR}/docker-compose.yml"
+scp -i "$SSH_KEY" deploy/config.yml  "${DEPLOY_USER}@${DEPLOY_HOST}:${TARGET_DIR}/config.yml"
+scp -i "$SSH_KEY" deploy/docker-compose.yml "${DEPLOY_USER}@${DEPLOY_HOST}:${TARGET_DIR}/docker-compose.yml"
 
 # ── 触发 CI ─────────────────────────────────────────────────────────
 echo ">>> 推送 $BRANCH 分支触发 GitHub Actions ..."
