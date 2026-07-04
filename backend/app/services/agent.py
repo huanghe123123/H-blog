@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import datetime, timedelta, timezone
 
 import httpx
 from sqlalchemy.orm import Session
@@ -207,11 +208,13 @@ def tool_create_post(db: Session, user: User, title: str, content: str,
                      tags: list[str] | None = None, status: str = "draft") -> str:
     from app.schemas.post import PostCreate
     from app.models.post import PostCategory, PostStatus
+    valid_categories = [c.value for c in PostCategory]
+    valid_statuses = [s.value for s in PostStatus]
     payload = PostCreate(
         title=title, content=content,
-        category=PostCategory(category) if category in PostCategory.__args__ else PostCategory.creative,
+        category=PostCategory(category) if category in valid_categories else PostCategory.creative,
         summary=summary, tags=tags,
-        status=PostStatus(status) if status in ("draft", "published") else PostStatus.draft,
+        status=PostStatus(status) if status in valid_statuses else PostStatus.draft,
     )
     post = post_svc.create_post(db, user, payload)
     return f"文章已创建：[{post.id}] {post.title}（状态：{post.status}）"
@@ -430,8 +433,13 @@ def run_agent(db: Session, user: User, message: str, context: dict | None) -> Ag
 def _build_system_prompt(db: Session, user: User, context: dict | None) -> str:
     """Build the system prompt, injecting page context data."""
     settings = get_settings()
+    now = datetime.now(timezone.utc)
+    tz = timezone(timedelta(hours=8))
+    local_now = now.astimezone(tz)
+
     parts = [
         f"你是 {settings.site_name} 的 AI 助手。",
+        f"当前时间：{local_now.strftime('%Y年%m月%d日 %H:%M')}（北京时间）",
         f"当前用户：{user.nickname or user.username}（角色：{user.role}）",
     ]
 
