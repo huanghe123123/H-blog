@@ -1217,3 +1217,124 @@ body {
   }
 }
 
+/* ===========================================================================
+   Tools page — three-column layout with iframe center
+   =========================================================================== */
+.tools-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 280px;
+  gap: clamp(12px, 2vw, 24px);
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.tools-left {
+  position: sticky;
+  top: 76px;
+}
+
+.tools-left .side-card {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.tools-center {
+  min-height: calc(100vh - 160px);
+}
+
+.tools-right {
+  position: sticky;
+  top: 76px;
+}
+
+.tools-iframe {
+  width: 100%;
+  height: calc(100vh - 160px);
+  border: 1px solid var(--card-border, #e8e8e8);
+  border-radius: var(--radius, 8px);
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+}
+
+.tools-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 160px);
+  color: var(--text-secondary, #999);
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius, 8px);
+  border: 2px dashed var(--border, #d9d9d9);
+}
+
+.tools-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all .15s;
+  color: var(--text, #1f2d3d);
+}
+
+.tools-category-header:hover {
+  background: var(--bg, #e8ecf2);
+}
+
+.tools-category-header.active {
+  color: var(--primary, #49B1F5);
+}
+
+.tools-subitem {
+  padding: 8px 14px 8px 32px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-secondary, #666);
+  border-left: 3px solid transparent;
+  transition: all .15s;
+  border-radius: 0 6px 6px 0;
+}
+
+.tools-subitem:hover {
+  background: var(--bg, #e8ecf2);
+  color: var(--text, #1f2d3d);
+}
+
+.tools-subitem.active {
+  border-left-color: var(--primary, #49B1F5);
+  background: rgba(73, 177, 245, .08);
+  color: var(--primary, #49B1F5);
+  font-weight: 500;
+}
+
+/* Responsive: collapse right sidebar first, then left sidebar */
+@media (max-width: 1240px) {
+  .tools-layout {
+    grid-template-columns: 220px 1fr;
+  }
+  .tools-right {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .tools-layout {
+    grid-template-columns: 1fr;
+  }
+  .tools-left {
+    position: static;
+    margin-bottom: 12px;
+  }
+  .tools-left .side-card {
+    max-height: none;
+  }
+  .tools-iframe {
+    height: calc(100vh - 280px);
+  }
+}
+

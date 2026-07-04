@@ -519,7 +519,9 @@
                     localStorage.setItem('snakeHighScore', highScore);
                     highScoreValue.textContent = highScore;
                 }
-                
+                // Report score to parent (blog integration)
+                try { window.parent.postMessage({ type: 'GAME_SCORE', game: 'snake', score: score }, '*'); } catch(e) {}
+
                 gameStatus.textContent = "游戏结束! 按重新开始";
                 gameStatus.style.color = "#ff0";
             }

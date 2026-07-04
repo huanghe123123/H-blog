@@ -11,6 +11,7 @@ import { LoginPage } from "../pages/LoginPage";
 import { PostDetailPage } from "../pages/PostDetailPage";
 import { PostEditorPage } from "../pages/PostEditorPage";
 import { SearchPage } from "../pages/SearchPage";
+import { ToolsPage } from "../pages/ToolsPage";
 import { UserProfilePage } from "../pages/UserProfilePage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { useAuth } from "../hooks/useAuth";
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
       { path: "/posts/search", element: <SearchPage /> },
       { path: "/posts/:id", element: <PostDetailPage /> },
       { path: "/users/:id", element: <UserProfilePage /> },
+      { path: "/tools", element: <ToolsPage /> },
       {
         element: <ProtectedRoute />,
         children: [

@@ -640,6 +640,8 @@
                             if (y < 0) {
                                 this.gameOver = true;
                                 document.getElementById('gameOver').style.display = 'block';
+                                // Report score to parent (blog integration)
+                                try { window.parent.postMessage({ type: 'GAME_SCORE', game: 'tetris', score: this.score }, '*'); } catch(e) {}
                                 return;
                             }
                             

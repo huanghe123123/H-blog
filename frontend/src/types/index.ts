@@ -67,3 +67,18 @@ export type Token = {
   access_token: string;
   token_type: string;
 };
+
+export type GameScore = {
+  id: number;
+  user_id: number;
+  game_name: string;
+  score: number;
+  created_at: string;
+};
+
+export type LeaderboardEntry = {
+  rank: number;
+  user: UserBrief;
+  score: number;
+  created_at: string;
+};

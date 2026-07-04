@@ -1,5 +1,5 @@
 import { Avatar, Button, Form, Input, Layout, Modal, Space, Typography, message } from "antd";
-import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound } from "lucide-react";
+import { Heart, Info, Layers, LogOut, Newspaper, Pencil, Search, Shield, UserRound, Grid3X3 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { fetchSiteConfig } from "../api/config";
@@ -61,6 +61,7 @@ export function AppLayout() {
     if (userMatch) return { page: "user_profile", user_id: Number(userMatch[1]) };
     if (path === "/" || path === "/index") return { page: "home" };
     if (path.startsWith("/categories") || path.startsWith("/posts/search")) return { page: "post_list" };
+    if (path.startsWith("/tools")) return { page: "tools" };
     return { page: "unknown" };
   }, [location.pathname]);
 
@@ -111,12 +112,14 @@ export function AppLayout() {
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
         ...(aboutData.enabled ? [{ path: "/about", icon: <Info size={18} />, label: "关于" }] : []),
+        { path: "/tools", icon: <Grid3X3 size={18} />, label: "更多" },
         ...(user.role === "admin" || user.role === "owner" ? [{ path: "/admin/users", icon: <Shield size={18} />, label: "用户管理" }] : [])
       ]
     : [
         { path: "/", icon: <Newspaper size={18} />, label: "主页" },
         { path: "/categories", icon: <Layers size={18} />, label: "分类" },
         ...(aboutData.enabled ? [{ path: "/about", icon: <Info size={18} />, label: "关于" }] : []),
+        { path: "/tools", icon: <Grid3X3 size={18} />, label: "更多" },
       ];
 
   return (
