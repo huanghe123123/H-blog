@@ -203,7 +203,7 @@ export function AppLayout() {
           <Button
             shape="circle"
             icon={<Pencil size={24} />}
-            style={{ width: 56, height: 56, boxShadow: "0 2px 12px rgba(0,0,0,.18)" }}
+            style={{ width: 56, height: 56, boxShadow: "0 2px 12px rgba(0,0,0,.18)", background: "#49B1F5", color: "#fff" }}
           />
         </div>
       )}
