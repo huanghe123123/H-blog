@@ -442,7 +442,7 @@ def _build_system_prompt(db: Session, user: User, context: dict | None) -> str:
         if page == "post_detail" and context.get("post_id"):
             try:
                 post = post_svc.get_post_or_404(db, int(context["post_id"]))
-                parts.append(f"用户正在浏览文章：")
+                parts.append(f"用户正在浏览文章（ID={context['post_id']}）：")
                 parts.append(f"  标题：{post.title}")
                 parts.append(f"  作者：{post.author.nickname or post.author.username}")
                 parts.append(f"  分类：{post.category}")
