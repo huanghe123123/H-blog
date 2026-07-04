@@ -166,7 +166,7 @@ export function PostDetailPage() {
             </Tag>
           ))}
           <Typography.Text type="secondary">
-            <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
+            <Link to={`/users/${post.author.id}`}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.published_at || post.created_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览
           </Typography.Text>
           <div className="post-detail-actions">
             <LikeButton targetType="post" targetId={post.id} shape="circle" />

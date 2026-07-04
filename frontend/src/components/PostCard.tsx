@@ -24,7 +24,7 @@ interface PostCardProps {
   onDeleted?: () => void;
 }
 
-export function PostCard({ post, coverOnTop = false, showCover = true, shadow = true, showActions = false, onDeleted }: PostCardProps) {
+export function PostCard({ post, coverOnTop = false, showCover = true, shadow = true, showActions = true, onDeleted }: PostCardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -58,11 +58,11 @@ export function PostCard({ post, coverOnTop = false, showCover = true, shadow = 
         )}
         <div className="post-card-footer">
           <Typography.Text type="secondary" className="post-card-meta">
-            <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.updated_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
+            <Link to={`/users/${post.author.id}`} onClick={(e) => e.stopPropagation()}>{post.author.nickname || post.author.username}</Link> · {dayjs(post.published_at || post.created_at).format("YYYY-MM-DD HH:mm")} · {post.view_count} 次浏览 · {(post.comment_count ?? 0) + (post.reply_count ?? 0) > 0 && <>{post.comment_count ?? 0} 条评论{(post.reply_count ?? 0) > 0 && <> · {post.reply_count} 条回复</>}</>}
           </Typography.Text>
           {showActions && (
             <Space className="post-card-actions" onClick={(e) => e.stopPropagation()}>
-              <LikeButton targetType="post" targetId={post.id} />
+              <LikeButton targetType="post" targetId={post.id} shape="circle" size="small" />
               {(user?.role === "admin" || user?.role === "owner") && (
                 <>
                   <Button size="small" icon={<Edit3 size={14} />} onClick={() => navigate(`/posts/${post.id}/edit`)} />
