@@ -85,6 +85,8 @@ def _build_defaults(yml: dict) -> dict:
         "email_verification_enabled": features.get("email_verification", True),
         "comments_enabled": features.get("comments_enabled", True),
         "likes_enabled": features.get("likes_enabled", True),
+        "agent_enabled": features.get("agent", False),
+        "mcp_enabled": features.get("mcp", False),
     }
 
 
@@ -143,12 +145,31 @@ class Settings(BaseSettings):
     email_verification_enabled: bool = True
     comments_enabled: bool = True
     likes_enabled: bool = True
+    agent_enabled: bool = False
+    mcp_enabled: bool = False
+
+    # LLM (OpenAI 兼容接口)
+    llm_api_key: str = ""
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_model: str = "gpt-4o"
+
+    # MCP API Keys (三级权限)
+    mcp_key_owner: str = ""
+    mcp_key_admin: str = ""
+    mcp_key_user: str = ""
 
     def __init__(self, **kwargs):
         yml = _load_config_yml()
         defaults = _build_defaults(yml)
-        # env vars (kwargs from pydantic-settings) override config.yml defaults
-        super().__init__(**{**defaults, **kwargs})
+        # Let pydantic read .env first, then apply config.yml
+        # only for fields that weren't overridden by .env or explicit kwargs
+        super().__init__(**kwargs)
+        for key, value in defaults.items():
+            if key not in kwargs:
+                current = getattr(self, key)
+                class_default = self.model_fields[key].default
+                if current == class_default:
+                    setattr(self, key, value)
 
 
 @lru_cache

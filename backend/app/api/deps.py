@@ -59,3 +59,26 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role not in (UserRole.ADMIN, UserRole.OWNER):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要管理员权限")
     return current_user
+
+
+def verify_mcp_key(request: Request) -> str:
+    """Verify X-API-Key header for MCP server access. Returns the role name."""
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    if not settings.mcp_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="MCP 功能未开启",
+        )
+    key = request.headers.get("X-API-Key", "")
+    if key == settings.mcp_key_owner:
+        return UserRole.OWNER
+    if key == settings.mcp_key_admin:
+        return UserRole.ADMIN
+    if key == settings.mcp_key_user:
+        return UserRole.USER
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="无效的 API Key",
+    )

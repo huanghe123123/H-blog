@@ -86,3 +86,5 @@ features:
   email_verification: false  # 本地测试关闭，生产通过 .env 覆盖
   comments_enabled: true
   likes_enabled: true
+  agent: false              # AI Agent 功能（POST /api/agent）
+  mcp: false                # MCP API Key 认证
