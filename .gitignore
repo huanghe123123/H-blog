@@ -12,6 +12,8 @@ build/
 postgres_data/
 conf/
 deploy/.env
+deploy/config.yml
+deploy/nginx-api.conf
 openapi.json
 vite.config.js
 vite.config.d.ts
