@@ -65,7 +65,7 @@ jobs:
             ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/blog-backend:latest
             ${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/blog-backend:${{ github.sha }}
 
-      # 镜像推送完成后，SSH 到 Azure 服务器拉取并重启容器
+      # SSH 到 Azure 服务器拉取镜像并重启容器
       - name: Deploy to Azure server
         uses: appleboy/ssh-action@v1.2.0
         with:
