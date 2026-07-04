@@ -20,8 +20,9 @@ export function AppLayout() {
   const [setupPasswordOpen, setSetupPasswordOpen] = useState(false);
   const [setupPasswordSubmitting, setSetupPasswordSubmitting] = useState(false);
   const [setupPasswordForm] = Form.useForm();
-  const fabRef = useRef<HTMLButtonElement>(null);
-  const dragRef = useRef({ active: false, startX: 0, startY: 0, posX: 0, posY: 0, moved: false });
+  const fabRef = useRef<HTMLDivElement>(null);
+  const [fabPos, setFabPos] = useState<{ left: number; top: number } | null>(null);
+  const fabDragRef = useRef({ active: false, startX: 0, startY: 0, origLeft: 0, origTop: 0 });
 
   useEffect(() => {
     fetchSiteConfig().then((cfg) => setSiteName(cfg.site_name));
@@ -83,47 +84,26 @@ export function AppLayout() {
   };
 
   const onFabPointerDown = useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
     const el = fabRef.current;
     if (!el) return;
+    e.preventDefault();
     const rect = el.getBoundingClientRect();
-    dragRef.current = {
-      active: true,
-      startX: e.clientX,
-      startY: e.clientY,
-      posX: rect.left,
-      posY: rect.top,
-      moved: false,
-    };
+    fabDragRef.current = { active: true, startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
+    el.setPointerCapture(e.pointerId);
+  }, []);
 
-    const onMove = (ev: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d.active) return;
-      const dx = ev.clientX - d.startX;
-      const dy = ev.clientY - d.startY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-        d.moved = true;
-      }
-      if (d.moved && fabRef.current) {
-        fabRef.current.style.left = `${d.posX + dx}px`;
-        fabRef.current.style.top = `${d.posY + dy}px`;
-        fabRef.current.style.right = "auto";
-        fabRef.current.style.bottom = "auto";
-      }
-    };
+  const onFabPointerMove = useCallback((e: React.PointerEvent) => {
+    const d = fabDragRef.current;
+    if (!d.active) return;
+    setFabPos({ left: d.origLeft + e.clientX - d.startX, top: d.origTop + e.clientY - d.startY });
+  }, []);
 
-    const onUp = () => {
-      const d = dragRef.current;
-      d.active = false;
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerup", onUp);
-      if (!d.moved) {
-        navigate("/posts/new");
-      }
-    };
-
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerup", onUp);
+  const onFabPointerUp = useCallback((e: React.PointerEvent) => {
+    const d = fabDragRef.current;
+    d.active = false;
+    if (Math.abs(e.clientX - d.startX) < 5 && Math.abs(e.clientY - d.startY) < 5) {
+      navigate("/posts/new");
+    }
   }, [navigate]);
 
   const navLinks = user
@@ -205,14 +185,27 @@ export function AppLayout() {
         </Form>
       </Modal>
       {user && (
-        <Button
+        <div
           ref={fabRef}
-          className="fab"
-          shape="circle"
-          icon={<Pencil size={24} />}
           onPointerDown={onFabPointerDown}
-          style={{ width: 56, height: 56 }}
-        />
+          onPointerMove={onFabPointerMove}
+          onPointerUp={onFabPointerUp}
+          onPointerCancel={onFabPointerUp}
+          style={{
+            position: "fixed",
+            zIndex: 100,
+            cursor: "move",
+            ...(fabPos
+              ? { left: fabPos.left, top: fabPos.top, bottom: "auto", right: "auto" }
+              : { bottom: 32, right: 32 }),
+          }}
+        >
+          <Button
+            shape="circle"
+            icon={<Pencil size={24} />}
+            style={{ width: 56, height: 56, boxShadow: "0 2px 12px rgba(0,0,0,.18)" }}
+          />
+        </div>
       )}
       {user && <AgentChat context={agentContext} />}
     </Layout>
