@@ -1216,3 +1216,8 @@ body {
     padding: 24px 20px 22px;
   }
 }
+
+/* Live2D AI 对话菜单图标颜色 */
+.oml2d-menus-item[data-name="ai-chat"] {
+  color: var(--primary) !important;
+}
